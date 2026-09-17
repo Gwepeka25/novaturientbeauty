@@ -1,0 +1,156 @@
+// Prisma schema for Michelle Ihirwe's booking site.
+//
+// Local dev uses SQLite (zero setup). Production (Render) uses PostgreSQL.
+// This schema intentionally avoids native Postgres-only types (enums, arrays,
+// JSON columns with native operators) so it can move to Postgres by only
+// changing `provider` below and re-running migrations.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  auditEvents AuditEvent[]
+}
+
+model Service {
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  durationMin   Int
+  priceCents    Int
+  currency      String   @default("EUR")
+  format        String // "in_person" | "online" | "both"
+  active        Boolean  @default(true)
+  displayOrder  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  appointments Appointment[]
+}
+
+// Recurring weekly availability, e.g. "Tuesdays 09:00-17:00".
+model AvailabilityRule {
+  id          String   @id @default(cuid())
+  weekday     Int // 0 = Sunday ... 6 = Saturday
+  startMinute Int // minutes from midnight, local Europe/Brussels time
+  endMinute   Int
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// One-off exceptions: extra availability, holidays, or blocked time ranges.
+model AvailabilityException {
+  id        String   @id @default(cuid())
+  date      String // "YYYY-MM-DD" in Europe/Brussels local date
+  startMinute Int?   // null + isFullDayBlock = whole day blocked
+  endMinute   Int?
+  isFullDayBlock Boolean @default(false)
+  kind      String // "block" | "extra_availability" | "holiday"
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SchedulingSettings {
+  id                       String   @id @default(cuid())
+  timezone                 String   @default("Europe/Brussels")
+  minNoticeMinutes         Int      @default(1440)
+  maxAdvanceDays           Int      @default(60)
+  bufferBeforeMinutes      Int      @default(0)
+  bufferAfterMinutes       Int      @default(15)
+  cancellationCutoffMinutes Int     @default(1440)
+  updatedAt                DateTime @updatedAt
+}
+
+model Appointment {
+  id               String   @id @default(cuid())
+  publicCode       String   @unique // short opaque reference shown to client
+  serviceId        String
+  service          Service  @relation(fields: [serviceId], references: [id])
+  format           String // "in_person" | "online"
+  startsAt         DateTime // stored in UTC
+  endsAt           DateTime // stored in UTC, startsAt + duration
+  status           String   @default("pending") // pending|confirmed|completed|cancelled_by_client|cancelled_by_practitioner|no_show
+  clientName       String
+  clientEmail      String
+  clientPhone      String?
+  clientNote       String? // optional, never required
+  privateOpsNote   String? // admin-only operational note, never clinical
+  cashPaid         Boolean  @default(false)
+  onlineMeetingUrl String? // only set/sent after confirmation
+  manageToken      String   @unique // secure token for reschedule/cancel links
+  manageTokenExp   DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  reviewInvite ReviewInvite?
+  auditEvents  AuditEvent[]
+
+  @@index([startsAt])
+  @@index([status])
+}
+
+model ReviewInvite {
+  id            String   @id @default(cuid())
+  appointmentId String   @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  token         String   @unique
+  tokenExp      DateTime
+  usedAt        DateTime?
+  createdAt     DateTime @default(now())
+
+  review Review?
+}
+
+model Review {
+  id              String   @id @default(cuid())
+  reviewInviteId  String?  @unique
+  reviewInvite    ReviewInvite? @relation(fields: [reviewInviteId], references: [id])
+  displayNameMode String   @default("anonymous") // "first_name" | "initials" | "anonymous"
+  displayName     String? // resolved public label, set at submission time
+  body            String
+  consentPublic   Boolean  @default(false)
+  status          String   @default("pending") // pending|approved|hidden|rejected|withdrawn
+  isLegacy        Boolean  @default(false) // manually-entered testimonial predating verified reviews
+  publishOrder    Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model WebsiteContent {
+  id        String   @id @default(cuid())
+  key       String // e.g. "hero.eyebrow", "about.bio"
+  locale    String   @default("en") // "en" | "fr" | "nl"
+  value     String
+  approved  Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, locale])
+}
+
+model AuditEvent {
+  id            String   @id @default(cuid())
+  actorId       String?
+  actor         AdminUser? @relation(fields: [actorId], references: [id])
+  action        String // e.g. "appointment.status_changed", "admin.sign_in"
+  appointmentId String?
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  metadata      String? // small JSON string, never sensitive/clinical content
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+}

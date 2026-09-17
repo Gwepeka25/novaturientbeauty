@@ -1,0 +1,271 @@
+/* Admin area styles — utilitarian, same brand tokens as the public site
+   (colors/fonts from globals.css) but a denser, table/form-oriented layout.
+   Classes are namespaced with admin- so they never collide with the public
+   site's design-system classes. */
+
+.admin-shell {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: 100vh;
+}
+
+.admin-sidebar {
+  background: var(--paper);
+  border-right: 1px solid var(--line);
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.admin-brand {
+  font-family: var(--font-italiana), serif;
+  font-size: 20px;
+}
+
+.admin-brand small {
+  display: block;
+  font-family: var(--font-dm-sans), sans-serif;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.admin-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-nav a {
+  padding: 10px 12px;
+  border-radius: 3px;
+  font-size: 14px;
+  color: var(--muted);
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.admin-nav a:hover {
+  background: var(--rose);
+}
+
+.admin-nav a[aria-current="page"] {
+  background: var(--ink);
+  color: var(--ink-inverse);
+}
+
+.admin-signout {
+  margin-top: auto;
+}
+
+.admin-main {
+  padding: 32px 40px;
+  max-width: 1100px;
+}
+
+.admin-page-title {
+  font-family: var(--font-italiana), serif;
+  font-size: 30px;
+  margin-bottom: 6px;
+}
+
+.admin-page-subtitle {
+  color: var(--muted);
+  margin-bottom: 28px;
+  font-size: 14px;
+}
+
+.admin-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.admin-card h2 {
+  font-family: var(--font-italiana), serif;
+  font-size: 20px;
+  margin-bottom: 14px;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.admin-stat {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  padding: 20px;
+}
+
+.admin-stat b {
+  display: block;
+  font-family: var(--font-italiana), serif;
+  font-size: 32px;
+}
+
+.admin-stat span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.admin-table th,
+.admin-table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.admin-table th {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 3px;
+  font-size: 12px;
+  background: var(--rose);
+  color: var(--ink);
+}
+
+.admin-badge.status-confirmed,
+.admin-badge.status-completed {
+  background: #dce9df;
+}
+
+.admin-badge.status-cancelled_by_client,
+.admin-badge.status-cancelled_by_practitioner,
+.admin-badge.status-no_show {
+  background: #ecd7d1;
+}
+
+.admin-field {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.admin-field label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.admin-field input,
+.admin-field select,
+.admin-field textarea {
+  min-height: 42px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.admin-field textarea {
+  min-height: 80px;
+}
+
+.admin-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.admin-form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.admin-btn {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--ink-inverse);
+  font-size: 13px;
+  border-radius: 2px;
+}
+
+.admin-btn.admin-btn-outline {
+  background: transparent;
+  color: var(--ink);
+}
+
+.admin-btn.admin-btn-danger {
+  background: var(--rust);
+  border-color: var(--rust);
+  color: #fff;
+}
+
+.admin-btn:disabled {
+  opacity: 0.5;
+}
+
+.admin-empty {
+  color: var(--muted);
+  padding: 20px 0;
+}
+
+.admin-login-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+}
+
+.admin-login-card {
+  width: 360px;
+  padding: 36px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+
+@media (max-width: 880px) {
+  .admin-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+    flex-direction: row;
+    align-items: center;
+    overflow-x: auto;
+  }
+
+  .admin-nav {
+    flex-direction: row;
+  }
+
+  .admin-signout {
+    margin-top: 0;
+  }
+
+  .admin-main {
+    padding: 20px;
+  }
+
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+}

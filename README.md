@@ -1,6 +1,6 @@
 # Michelle Ihirwe — website build handoff
 
-This repository contains the approved **Option C: Personal Editorial Letter** direction for Michelle Ihirwe’s new booking website.
+This repository contains the approved **Option 3: Private Sanctuary** direction for Michelle Ihirwe’s new booking website.
 
 ## Start here
 
@@ -13,7 +13,8 @@ The reference page establishes the required composition, feeling, hierarchy, typ
 ## Approved direction
 
 - Michelle leads the brand; **Novaturient Beauty** is secondary.
-- Editorial and personal rather than clinical or template-like.
+- Immersive and editorial rather than clinical or template-like.
+- A full-office photographic hero with a deep forest overlay, oversized serif headline, warm-gold actions, and Michelle’s profile card.
 - Calm, warm, discreet, and highly professional.
 - Real photography only—no stock or AI-generated people.
 - Short, reassuring copy with a clear path to booking.
@@ -25,7 +26,7 @@ The reference page establishes the required composition, feeling, hierarchy, typ
 | File | Purpose |
 | --- | --- |
 | `index.html` | Standalone approved visual reference |
-| `reference/approved-option-c-fragment.html` | Original design fragment/source |
+| `reference/approved-option-3-fragment.html` | Original approved design fragment/source |
 | `assets/michelle-portrait.jpeg` | Original portrait of Michelle |
 | `assets/michelle-office.jpeg` | Original office photograph |
 | `reference/pricing-list.pdf` | Supplied price-list source |
