@@ -9,7 +9,10 @@ services:
     name: novaturientbeauty
     runtime: node
     plan: free
-    buildCommand: npm install && npx prisma migrate deploy && npm run build
+    # --include=dev is required: NODE_ENV=production below makes plain
+    # `npm install` skip devDependencies, but `next build`'s TypeScript
+    # check needs typescript/@types/* (devDependencies) to run at all.
+    buildCommand: npm install --include=dev && npx prisma migrate deploy && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
