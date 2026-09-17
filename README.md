@@ -7,7 +7,7 @@ Read [`docs/HANDOFF.md`](docs/HANDOFF.md) for the pre-launch checklist, accessib
 ## Tech stack
 
 - **Next.js 16** (App Router, TypeScript) — server-rendered public pages, API routes, Server Actions for the admin area
-- **Prisma** + **SQLite** locally, **PostgreSQL** in production (Render) — same schema, one line to switch
+- **Prisma** + **PostgreSQL** — the same database everywhere (local dev and production), so there's one schema and one migration history to reason about
 - **Custom session auth** for the single admin account (JWT in an httpOnly cookie via `jose`, passwords hashed with `bcryptjs`) — no third-party auth provider needed
 - **Resend** for transactional email (booking confirmations, review invites) — optional locally; the app logs instead of sending until you add an API key
 - **Luxon** for all date/time math, so `Europe/Brussels` daylight-saving transitions are handled correctly
@@ -15,10 +15,13 @@ Read [`docs/HANDOFF.md`](docs/HANDOFF.md) for the pre-launch checklist, accessib
 
 ## Getting started (local development)
 
+You need a Postgres database to develop against — either install Postgres locally, or point `DATABASE_URL` at a free cloud instance (Render, Neon, Supabase all offer one).
+
 ```bash
 npm install
-cp .env.example .env        # then fill in SESSION_SECRET, SEED_ADMIN_* (see below)
-npm run db:migrate           # creates prisma/dev.db and applies migrations
+cp .env.example .env        # then fill in DATABASE_URL, SESSION_SECRET, SEED_ADMIN_* (see below)
+createdb novaturientbeauty   # only if running Postgres locally yourself
+npm run db:migrate           # applies migrations
 npm run db:seed              # confirmed services/fees, admin login, placeholder content
 npm run dev                  # http://localhost:3000
 ```
@@ -37,10 +40,10 @@ Sign in to the admin area at `/admin/login` with whatever `SEED_ADMIN_EMAIL` / `
 | --- | --- |
 | `npm run dev` | Start the dev server |
 | `npm run build` / `npm start` | Production build / run |
-| `npm run db:migrate` | Apply Prisma migrations (creates `prisma/dev.db` locally) |
+| `npm run db:migrate` | Apply Prisma migrations |
 | `npm run db:seed` | Seed confirmed services, admin user, default availability, placeholder content |
 | `npm run db:studio` | Prisma Studio — browse/edit the database directly |
-| `npm test` | Unit + integration tests (Vitest, against a disposable `prisma/test.db`) |
+| `npm test` | Unit + integration tests (Vitest, against a disposable Postgres database — see `TEST_DATABASE_URL` below) |
 | `npm run test:e2e` | End-to-end tests (Playwright) — needs the dev server; `npx playwright install` once first |
 | `npm run lint` | ESLint |
 
@@ -50,12 +53,13 @@ See [`.env.example`](.env.example) for the full list with explanations. Nothing 
 
 | Variable | Local dev | Production |
 | --- | --- | --- |
-| `DATABASE_URL` | `file:./dev.db?pool_timeout=20` | A Postgres connection string from Render |
-| `SESSION_SECRET` | any long random string | a **different** long random string, kept secret |
+| `DATABASE_URL` | your local/cloud Postgres connection string | set automatically by `render.yaml` from the Postgres instance it creates |
+| `SESSION_SECRET` | any long random string | a **different** long random string, kept secret (`render.yaml` generates one automatically) |
 | `RESEND_API_KEY` | optional — leave blank to log emails instead of sending | required to actually send email |
 | `EMAIL_FROM` | any value | a verified sender on your Resend domain |
 | `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000` | your real domain, e.g. `https://michelle-ihirwe.be` |
 | `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` / `SEED_ADMIN_NAME` | only read by `npm run db:seed` | same, for the first production admin account |
+| `TEST_DATABASE_URL` | only read by `npm test`; defaults to `novaturientbeauty_test` on localhost if unset | — (tests don't run in production) |
 
 ## Setting up Resend (email)
 
@@ -68,13 +72,13 @@ Booking confirmations, reschedule/cancel links, and review invites are sent by e
 
 ## Deploying to Render
 
-1. **Database**: create a Render PostgreSQL instance. Copy its connection string into `DATABASE_URL` for the web service (Render's internal connection string is fine — no need for the external one).
-2. **Web service**: create a Render Web Service from this repo.
-   - Build command: `npm install && npx prisma migrate deploy && npm run build`
-   - Start command: `npm start`
-3. Set all the environment variables from `.env.example` in Render's dashboard (`SESSION_SECRET` and `RESEND_API_KEY` especially — never commit these).
-4. After the first deploy, run the seed **once** (Render's shell, or a one-off job): `npm run db:seed`. Do this before pointing real users at the site — it creates the admin login and confirmed pricing.
-5. Point your domain at the Render service and update `NEXT_PUBLIC_SITE_URL`.
+This repo includes a [`render.yaml`](render.yaml) Blueprint that creates the Postgres database and web service together, wires `DATABASE_URL` between them automatically, and generates a random `SESSION_SECRET` — you only need to fill in the rest.
+
+1. In the Render dashboard: **New → Blueprint**, pick this repo, and **make sure the Branch field matches the branch you actually want deployed** (Render defaults to your repo's default branch, which may not be where the app lives if it's still on a feature branch).
+2. Render reads `render.yaml` and shows you the Postgres database + web service it's about to create — approve it.
+3. Once created, open the web service → **Environment** and fill in the variables marked `sync: false` in `render.yaml`: `NEXT_PUBLIC_SITE_URL` (the `.onrender.com` URL Render gave you, or your real domain once you have one), and — when you're ready to send real email — `RESEND_API_KEY`, `EMAIL_FROM`. Also set `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD`/`SEED_ADMIN_NAME` to Michelle's real login for the one-time seed in the next step.
+4. After the first deploy succeeds, run the seed **once**, from the web service's **Shell** tab in the Render dashboard: `npm run db:seed`. Do this before sharing the link — it creates the admin login and confirmed pricing. (You can remove the `SEED_ADMIN_*` variables afterward if you'd rather they not sit in the environment long-term.)
+5. Open the `.onrender.com` URL Render gives you — that's your clickable link. Point a real domain at it later by adding a Custom Domain in the service settings and updating `NEXT_PUBLIC_SITE_URL` to match.
 
 ### Backup & restore (Postgres)
 

@@ -1,7 +1,9 @@
 import { defineConfig } from "vitest/config";
 import path from "path";
 
-const TEST_DB_PATH = path.resolve(import.meta.dirname, "prisma/test.db");
+const TEST_DATABASE_URL =
+  process.env.TEST_DATABASE_URL ??
+  "postgresql://postgres:localdevpassword@localhost:5432/novaturientbeauty_test";
 
 export default defineConfig({
   test: {
@@ -10,7 +12,7 @@ export default defineConfig({
     globalSetup: "./tests/setup/global-setup.ts",
     fileParallelism: false,
     env: {
-      DATABASE_URL: `file:${TEST_DB_PATH}`,
+      DATABASE_URL: TEST_DATABASE_URL,
       SESSION_SECRET: "test-session-secret-not-for-real-use-0000000000",
     },
   },

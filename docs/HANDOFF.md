@@ -41,7 +41,7 @@ npm run test:e2e # 10 end-to-end tests — full booking journey (keyboard/ARIA-c
 
 Both suites were green as of this handoff. Notably verified:
 
-- Two simultaneous booking requests for the identical slot: exactly one succeeds, the other gets a clean "no longer available" response — never a double-booking. (Tested against SQLite locally; Postgres in production has native row-level locking and handles this at least as well.)
+- Several simultaneous booking requests for the identical slot: exactly one succeeds, the rest get a clean "no longer available" response — never a double-booking. This was genuinely tricky: Postgres's default isolation lets a naive "check, then insert" race under real concurrency (confirmed empirically — 3 of 5 concurrent requests got through before this was fixed), and `SERIALIZABLE` isolation, tried next, didn't reliably catch it either. The fix serializes booking writes through a Postgres advisory lock (`src/lib/db-lock.ts`) — verified with up to 6 truly concurrent requests, always producing exactly one appointment.
 - Availability correctly shifts across the March/October `Europe/Brussels` DST transitions.
 - A review link can be used exactly once; a second attempt with the same link is rejected.
 - An unauthenticated request to any `/admin/*` page or the underlying Server Actions is redirected/blocked.
@@ -77,3 +77,4 @@ What's still worth a real screen-reader pass (NVDA/VoiceOver) before launch, bey
 - Translations (FR/NL) are structurally supported (`WebsiteContent.locale`) but no French/Dutch copy has been written yet
 - The admin calendar is a week-agenda view, not a full drag-and-drop calendar grid
 - No automated screen-reader test — see the accessibility section above
+- The booking advisory lock (see section 3) serializes all booking writes through one lock. This is the right trade-off for a single practitioner's volume — bookings are fast, so brief queuing under a realistic burst is imperceptible — but it does mean a genuinely pathological number of truly simultaneous unrelated bookings (tested: 10 at once, for unrelated future dates) can start timing out rather than all succeeding promptly. If booking volume ever grows enough for that to matter, narrow the lock to a per-day key instead of one global key.

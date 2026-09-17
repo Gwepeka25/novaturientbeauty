@@ -45,20 +45,23 @@ beforeEach(async () => {
 });
 
 describe("createAppointment — double booking prevention", () => {
-  // Two clients clicking "confirm" for the same slot within the same
-  // second is the realistic worst case for a single-practitioner site;
-  // that's what this asserts strictly. (SQLite — dev/test only — is a
-  // single-writer file store, so pushing far beyond this concurrency level
-  // here tests SQLite's own connection queuing rather than our logic;
-  // Postgres in production has real row-level locking and doesn't share
-  // that ceiling. The one guarantee that must never break at any
-  // concurrency level, on either database, is asserted below: the final
-  // appointment count for the slot is always exactly one.)
+  // Under Postgres's default READ COMMITTED isolation, the obvious "check
+  // for a conflict, then insert" pattern is a genuine race: concurrent
+  // transactions can each check, each see no conflict (neither has
+  // committed yet), and each insert — a real double-booking. This was
+  // caught empirically (not by reasoning about it): SERIALIZABLE isolation
+  // was tried first and did NOT reliably catch it either, because
+  // Postgres's predicate locking doesn't consistently detect a phantom
+  // insert into what a concurrent transaction's scan saw as empty.
+  // createAppointment instead serializes all booking writes through a
+  // Postgres advisory lock (see src/lib/db-lock.ts) — verified here with
+  // several truly concurrent requests, and manually with up to 6 during
+  // development, always producing exactly one appointment.
   it("only allows one of several concurrent requests for the same slot to succeed", { timeout: 20000 }, async () => {
     const startUtc = localToUtc(TEST_DATE, 10 * 60);
 
     const attempts = await Promise.allSettled(
-      Array.from({ length: 2 }, (_, i) =>
+      Array.from({ length: 4 }, (_, i) =>
         createAppointment({
           serviceId,
           format: "in_person",
@@ -73,7 +76,7 @@ describe("createAppointment — double booking prevention", () => {
     const failed = attempts.filter((a) => a.status === "rejected");
 
     expect(succeeded).toHaveLength(1);
-    expect(failed).toHaveLength(1);
+    expect(failed).toHaveLength(3);
     for (const f of failed) {
       if (f.status === "rejected") {
         expect(f.reason).toBeInstanceOf(SlotUnavailableError);

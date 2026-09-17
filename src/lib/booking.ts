@@ -2,6 +2,7 @@ import { nanoid } from "nanoid";
 import { prisma } from "@/lib/prisma";
 import { isSlotStillAvailable } from "@/lib/availability";
 import { nowUtc } from "@/lib/timezone";
+import { acquireBookingLock } from "@/lib/db-lock";
 
 export class SlotUnavailableError extends Error {
   constructor() {
@@ -35,6 +36,8 @@ export async function createAppointment(input: CreateAppointmentInput) {
   try {
     return await prisma.$transaction(
       async (tx) => {
+        await acquireBookingLock(tx);
+
         const conflict = await tx.appointment.findFirst({
           where: {
             status: { in: ["pending", "confirmed"] },
@@ -74,10 +77,13 @@ export async function createAppointment(input: CreateAppointmentInput) {
 
         return appointment;
       },
-      // Generous timeout: under heavy contention for the same slot, losing
-      // requests should surface as "someone else just booked this" rather
-      // than a raw transaction-timeout error.
-      { maxWait: 10_000, timeout: 10_000 },
+      {
+        // Generous timeout: under heavy contention for the same slot, losing
+        // requests should surface as "someone else just booked this" rather
+        // than a raw transaction-timeout error.
+        maxWait: 10_000,
+        timeout: 10_000,
+      },
     );
   } catch (error) {
     if (error instanceof SlotUnavailableError) throw error;
@@ -94,7 +100,7 @@ export async function createAppointment(input: CreateAppointmentInput) {
   }
 }
 
-function isTransactionContentionError(error: unknown): boolean {
+export function isTransactionContentionError(error: unknown): boolean {
   return (
     typeof error === "object" &&
     error !== null &&

@@ -1,0 +1,36 @@
+databases:
+  - name: novaturientbeauty-db
+    plan: free
+    databaseName: novaturientbeauty
+    user: novaturientbeauty
+
+services:
+  - type: web
+    name: novaturientbeauty
+    runtime: node
+    plan: free
+    buildCommand: npm install && npx prisma migrate deploy && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaturientbeauty-db
+          property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true
+      # Set these in the Render dashboard after the first deploy — see
+      # docs/HANDOFF.md and .env.example for what each one does.
+      - key: NEXT_PUBLIC_SITE_URL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: SEED_ADMIN_EMAIL
+        sync: false
+      - key: SEED_ADMIN_PASSWORD
+        sync: false
+      - key: SEED_ADMIN_NAME
+        sync: false

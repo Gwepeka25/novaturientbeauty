@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { nowUtc } from "@/lib/timezone";
 import { isSlotStillAvailable } from "@/lib/availability";
 import { rateLimit } from "@/lib/rate-limit";
+import { isTransactionContentionError } from "@/lib/booking";
+import { acquireBookingLock } from "@/lib/db-lock";
 
 const schema = z.object({ startUtc: z.string().datetime() });
 
@@ -47,33 +49,43 @@ export async function POST(
 
   const newEnd = new Date(newStart.getTime() + appointment.service.durationMin * 60_000);
 
-  const updated = await prisma.$transaction(async (tx) => {
-    const conflict = await tx.appointment.findFirst({
-      where: {
-        id: { not: appointment.id },
-        status: { in: ["pending", "confirmed"] },
-        startsAt: { lt: newEnd },
-        endsAt: { gt: newStart },
-      },
-    });
-    if (conflict) throw new Error("SLOT_TAKEN");
+  const updated = await prisma
+    .$transaction(
+      async (tx) => {
+        await acquireBookingLock(tx);
 
-    const result = await tx.appointment.update({
-      where: { id: appointment.id },
-      data: { startsAt: newStart, endsAt: newEnd },
-    });
-    await tx.auditEvent.create({
-      data: {
-        action: "appointment.rescheduled",
-        appointmentId: appointment.id,
-        metadata: JSON.stringify({ from: appointment.startsAt, to: newStart }),
+        const conflict = await tx.appointment.findFirst({
+          where: {
+            id: { not: appointment.id },
+            status: { in: ["pending", "confirmed"] },
+            startsAt: { lt: newEnd },
+            endsAt: { gt: newStart },
+          },
+        });
+        if (conflict) throw new Error("SLOT_TAKEN");
+
+        const result = await tx.appointment.update({
+          where: { id: appointment.id },
+          data: { startsAt: newStart, endsAt: newEnd },
+        });
+        await tx.auditEvent.create({
+          data: {
+            action: "appointment.rescheduled",
+            appointmentId: appointment.id,
+            metadata: JSON.stringify({ from: appointment.startsAt, to: newStart }),
+          },
+        });
+        return result;
       },
+      // See src/lib/db-lock.ts for why this needs the advisory lock: the
+      // same check-then-write race as new bookings applies here.
+      { maxWait: 10_000, timeout: 10_000 },
+    )
+    .catch((error) => {
+      if (error instanceof Error && error.message === "SLOT_TAKEN") return null;
+      if (isTransactionContentionError(error)) return null;
+      throw error;
     });
-    return result;
-  }).catch((error) => {
-    if (error instanceof Error && error.message === "SLOT_TAKEN") return null;
-    throw error;
-  });
 
   if (!updated) {
     return NextResponse.json(

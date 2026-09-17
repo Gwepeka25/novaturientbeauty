@@ -1,16 +1,18 @@
 // Prisma schema for Michelle Ihirwe's booking site.
 //
-// Local dev uses SQLite (zero setup). Production (Render) uses PostgreSQL.
-// This schema intentionally avoids native Postgres-only types (enums, arrays,
-// JSON columns with native operators) so it can move to Postgres by only
-// changing `provider` below and re-running migrations.
+// PostgreSQL everywhere — the same database (Render Postgres) is used for
+// local development and production, so there is only one schema and one
+// migration history to keep in sync. This schema intentionally avoids
+// Postgres-only features (enums, arrays, native JSON operators) it doesn't
+// need, so nothing here is hard to reason about even though it isn't
+// SQLite.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
