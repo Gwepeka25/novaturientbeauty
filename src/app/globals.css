@@ -949,6 +949,9 @@ h2.serif,
 
 fieldset {
   border: none;
+  min-width: 0; /* browsers default fieldset to min-width: min-content, which
+                   defeats any overflow-x: auto on a child (like .date-chip-row)
+                   and grows the whole page instead of just that row */
 }
 
 legend {
