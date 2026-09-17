@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { getContentMany } from "@/lib/content";
 import { BookingCTA } from "@/components/booking-cta";
 import { IconMapPin, IconShieldCheck } from "@/components/icons";
+import { PRACTITIONER_NAME } from "@/lib/site-config";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Practical details for reaching Michelle Ihirwe.",
+  description: `Practical details for reaching ${PRACTITIONER_NAME}.`,
 };
 
 export default async function ContactPage() {

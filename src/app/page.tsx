@@ -4,6 +4,7 @@ import { formatFeeCents } from "@/lib/services-data";
 import { getContentMany } from "@/lib/content";
 import { Reveal } from "@/components/reveal";
 import { BookingCTA } from "@/components/booking-cta";
+import { BRAND_NAME, PRACTITIONER_FULL, PRACTITIONER_NAME, PRACTITIONER_TITLE } from "@/lib/site-config";
 import {
   IconBanknote,
   IconUserRound,
@@ -64,8 +65,8 @@ export default async function HomePage() {
       >
         <header className="hero-header wrap">
           <Link className="brand" href="/">
-            <b className="serif">Michelle Ihirwe</b>
-            <small>Sexologist &amp; Intimacy Therapist</small>
+            <b className="serif">{BRAND_NAME}</b>
+            <small>{PRACTITIONER_FULL}</small>
           </Link>
           <nav className="site-nav" aria-label="Primary">
             <a href="#ps-paths">Find your session</a>
@@ -100,12 +101,12 @@ export default async function HomePage() {
               <div
                 className="profile-photo"
                 role="img"
-                aria-label="Portrait of Michelle Ihirwe"
+                aria-label={`Portrait of ${PRACTITIONER_NAME}`}
                 style={{ backgroundImage: "url('/images/michelle-portrait.jpg')" }}
               />
               <div>
-                <b className="serif">Michelle Ihirwe</b>
-                <small>Sexologist &amp; Intimacy Therapist</small>
+                <b className="serif">{PRACTITIONER_NAME}</b>
+                <small>{PRACTITIONER_TITLE}</small>
               </div>
             </div>
             <p>{content["hero.profile_tagline"]}</p>

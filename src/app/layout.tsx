@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, Instrument_Serif } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { BRAND_NAME, PRACTITIONER_FULL } from "@/lib/site-config";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -22,17 +23,16 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Michelle Ihirwe — Sexologist & Intimacy Therapist",
-    template: "%s — Michelle Ihirwe",
+    default: `${BRAND_NAME} — ${PRACTITIONER_FULL}`,
+    template: `%s — ${BRAND_NAME}`,
   },
-  description:
-    "A calm, confidential space to talk about intimacy, desire and connection. In-person sessions in Jette and online sessions, with Michelle Ihirwe, Sexologist & Intimacy Therapist.",
+  description: `${BRAND_NAME}: a calm, confidential space to talk about intimacy, desire and connection. In-person sessions in Jette and online sessions, with ${PRACTITIONER_FULL}.`,
   openGraph: {
-    title: "Michelle Ihirwe — Sexologist & Intimacy Therapist",
+    title: `${BRAND_NAME} — ${PRACTITIONER_FULL}`,
     description:
       "A calm, confidential space to talk about intimacy, desire and connection.",
     url: siteUrl,
-    siteName: "Michelle Ihirwe",
+    siteName: BRAND_NAME,
     type: "website",
   },
 };

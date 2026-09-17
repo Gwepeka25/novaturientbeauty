@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { BRAND_NAME } from "@/lib/site-config";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -36,7 +37,7 @@ export default function AdminLoginPage() {
     <div className="admin-login-wrap">
       <form className="admin-login-card" onSubmit={handleSubmit}>
         <div className="admin-brand" style={{ marginBottom: 24 }}>
-          Michelle Ihirwe
+          {BRAND_NAME}
           <small>Admin sign in</small>
         </div>
         <div className="admin-field">

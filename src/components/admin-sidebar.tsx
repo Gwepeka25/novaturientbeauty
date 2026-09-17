@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { BRAND_NAME } from "@/lib/site-config";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard" },
@@ -28,7 +29,7 @@ export function AdminSidebar({ name }: { name: string }) {
   return (
     <aside className="admin-sidebar">
       <div className="admin-brand">
-        Michelle Ihirwe
+        {BRAND_NAME}
         <small>{name}</small>
       </div>
       <nav className="admin-nav" aria-label="Admin">

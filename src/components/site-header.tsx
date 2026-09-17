@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { BRAND_NAME, PRACTITIONER_FULL } from "@/lib/site-config";
 
 const NAV_LINKS = [
   { href: "/about", label: "About" },
@@ -22,8 +23,8 @@ export function SiteHeader() {
   return (
     <header className="site-header wrap" style={{ position: "relative" }}>
       <Link className="brand" href="/">
-        <b className="serif">Michelle Ihirwe</b>
-        <small>Sexologist &amp; Intimacy Therapist</small>
+        <b className="serif">{BRAND_NAME}</b>
+        <small>{PRACTITIONER_FULL}</small>
       </Link>
 
       <nav className="site-nav" aria-label="Primary">

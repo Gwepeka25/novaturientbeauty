@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import { createEvent } from "ics";
 import { formatLocalDateTime } from "@/lib/timezone";
+import { BRAND_NAME, PRACTITIONER_NAME } from "@/lib/site-config";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 const emailFrom = process.env.EMAIL_FROM ?? "no-reply@example.com";
@@ -45,6 +46,7 @@ export async function sendBookingConfirmationEmail(appointment: AppointmentForEm
     <p>You can view, reschedule or cancel your appointment here: <a href="${manageUrl}">${manageUrl}</a></p>
     <p>Payment is by cash for in-person sessions. If your session is online, the meeting link and any payment arrangement will be confirmed here closer to your appointment.</p>
     <p>See you soon.</p>
+    <p>— ${escapeHtml(BRAND_NAME)}</p>
   `;
   const ics = buildIcs(appointment);
   // Neutral subject line — no service/appointment type revealed.
@@ -60,7 +62,7 @@ function buildIcs(appointment: AppointmentForEmail): string | null {
   const start = appointment.startsAt;
   const end = appointment.endsAt;
   const { error, value } = createEvent({
-    title: "Appointment — Michelle Ihirwe", // neutral, no service/type revealed
+    title: `Appointment — ${PRACTITIONER_NAME}`, // neutral, no service/type revealed
     start: [
       start.getUTCFullYear(),
       start.getUTCMonth() + 1,
@@ -97,6 +99,7 @@ export async function sendReviewInviteEmail(
     <p>Thank you for your recent appointment. If you'd like to, you can leave a private review here — you choose whether it's published, and how you're identified.</p>
     <p><a href="${reviewUrl}">${reviewUrl}</a></p>
     <p>This link is single-use and will expire after 30 days.</p>
+    <p>— ${escapeHtml(BRAND_NAME)}</p>
   `;
   await sendEmail(clientEmail, "A quick follow-up", html);
 }

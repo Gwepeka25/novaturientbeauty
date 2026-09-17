@@ -741,6 +741,24 @@ h2.serif,
   color: var(--muted);
 }
 
+.specialty-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 0;
+}
+
+.specialty-list li {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--paper);
+}
+
 .formats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

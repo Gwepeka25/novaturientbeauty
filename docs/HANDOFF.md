@@ -8,9 +8,12 @@ Nothing below is fabricated — each is either a reasonable placeholder clearly 
 
 | Item | Where | Status |
 | --- | --- | --- |
+| Brand name | `src/lib/site-config.ts` | **Decided**: the site now shows both — "Novaturient Beauty" as the practice brand (header, footer, page titles, emails) and "Michelle Ihirwe, Sexologist & Intimacy Therapist" as the named practitioner. Not admin-editable on purpose; change it here if that ever needs to change. |
 | Credentials (institutions, years) | `/admin/content` → About | Entered from the build brief; must be **verified** by Michelle before launch (not yet marked approved) |
-| About bio paragraph | `/admin/content` → About | Drafted by the build; needs Michelle's voice/approval |
-| Contact email & phone | `/admin/content` → Contact | Placeholder (`hello@example.com`, blank phone) — must be replaced |
+| About bio paragraph | `/admin/content` → About | Now uses wording pulled directly from her real novaturientbeauty.com "About Me" section — should be a quick confirm rather than a rewrite, but still needs the "Approved" checkbox |
+| Areas of focus / specialties | `/admin/content` → About (`about.specialties`) | Pulled from her real Doctoranytime profile (Addictions, Female/Male Sexual Disorder, Vaginismus, Desire disorder, Difficulty communicating with partner, Sexuality problems, Pregnancy follow-up, Harassment) — confirm this list is current before approving |
+| Legacy testimonial | `/admin/reviews` | Still the one placeholder quote from the design brief. Her real site has 3 real testimonials (Marie, Gwenn, Isabelle) — swap these in once you have the exact text; don't invent quotes |
+| Contact email & phone | `/admin/content` → Contact | Placeholder (`hello@example.com`, blank phone) — must be replaced (likely `michelle@novaturientbeauty.com`, to be confirmed) |
 | Privacy Policy | `/privacy` | **Draft, explicitly labeled "needs legal review"** — do not launch without a lawyer reviewing GDPR lawful basis, retention periods, and data-subject rights |
 | Terms & Cancellation Policy | `/terms` | **Draft, explicitly labeled "needs legal review"** — cancellation window (currently 24h), no-show policy, and the "not an emergency service" wording all need Michelle + legal sign-off |
 | Weekly availability (Mon–Fri 09:00–17:00) | `/admin/availability` | Operational placeholder — replace with Michelle's real hours |

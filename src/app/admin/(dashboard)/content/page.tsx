@@ -15,7 +15,7 @@ const GROUPS: { title: string; keys: ContentKey[] }[] = [
       "hero.profile_tagline",
     ],
   },
-  { title: "About", keys: ["about.bio", "about.credentials"] },
+  { title: "About", keys: ["about.bio", "about.credentials", "about.specialties"] },
   { title: "Sessions", keys: ["sessions.cash_note"] },
   { title: "Contact", keys: ["contact.address", "contact.email", "contact.phone", "contact.note"] },
   { title: "Legal (draft — needs review)", keys: ["privacy.body", "terms.body"] },

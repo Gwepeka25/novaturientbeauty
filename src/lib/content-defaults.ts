@@ -14,12 +14,23 @@ export const CONTENT_DEFAULTS = {
     "Professional guidance with warmth, deep listening and respect for your pace.",
 
   "about.bio":
-    "Michelle Ihirwe is a sexologist and intimacy therapist working with individuals and couples on desire, connection, communication and confidence. Her approach is gentle, direct and non-judgmental: you set the pace, she brings her training, full attention and a space held with intention.",
+    "I bring a unique blend of expertise and empathy to my work. With a background in psychology and sexology, I've dedicated my career to understanding the complexities of human relationships and the profound impact of self-discovery. My approach is rooted in active listening, creating a safe, judgment-free space where vulnerability becomes a strength. I work with individuals and couples on desire, connection, communication and confidence—you set the pace, I bring my training, full attention and a space held with intention.",
   "about.credentials": JSON.stringify([
     { title: "Postgraduate Sexology", institution: "Curtin University", years: "2014" },
     { title: "Bachelor of Psychology", institution: "Ghent University", years: "2007–2011" },
     { title: "Master of Health Promotion", institution: "Ghent University", years: "2011–2013" },
     { title: "Sex, Love and Relationship Coaching", institution: "Layla Martin", years: "2020" },
+  ]),
+  "about.specialties": JSON.stringify([
+    "Addictions",
+    "Female sexual disorder",
+    "Male sexual disorder",
+    "Vaginismus",
+    "Desire disorder",
+    "Difficulty communicating with partner",
+    "Sexuality problems",
+    "Pregnancy follow-up",
+    "Harassment",
   ]),
 
   "contact.address": "Rue Amélie Gomand 45, Jette",

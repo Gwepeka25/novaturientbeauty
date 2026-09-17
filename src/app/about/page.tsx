@@ -1,22 +1,25 @@
 import type { Metadata } from "next";
 import { getContent } from "@/lib/content";
 import { BookingCTA } from "@/components/booking-cta";
+import { PRACTITIONER_NAME } from "@/lib/site-config";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "About",
-  description: "Michelle Ihirwe's approach and credentials.",
+  description: `${PRACTITIONER_NAME}'s approach and credentials.`,
 };
 
 type Credential = { title: string; institution: string; years: string };
 
 export default async function AboutPage() {
-  const [bio, credentialsJson] = await Promise.all([
+  const [bio, credentialsJson, specialtiesJson] = await Promise.all([
     getContent("about.bio"),
     getContent("about.credentials"),
+    getContent("about.specialties"),
   ]);
   const credentials: Credential[] = JSON.parse(credentialsJson);
+  const specialties: string[] = JSON.parse(specialtiesJson);
 
   return (
     <>
@@ -48,6 +51,16 @@ export default async function AboutPage() {
               <p>{c.institution}</p>
               <small>{c.years}</small>
             </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="wrap section">
+        <div className="eyebrow">Areas of focus</div>
+        <h2 className="serif">What we can work on together.</h2>
+        <ul className="specialty-list">
+          {specialties.map((s) => (
+            <li key={s}>{s}</li>
           ))}
         </ul>
       </section>
