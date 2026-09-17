@@ -14,6 +14,22 @@ export type Slot = { startUtc: Date; endUtc: Date };
 
 type Interval = { start: number; end: number };
 
+/** Merges overlapping/adjacent/duplicate intervals into a minimal disjoint set. */
+function mergeIntervals(intervals: Interval[]): Interval[] {
+  if (intervals.length === 0) return [];
+  const sorted = [...intervals].sort((a, b) => a.start - b.start);
+  const merged: Interval[] = [sorted[0]];
+  for (const iv of sorted.slice(1)) {
+    const last = merged[merged.length - 1];
+    if (iv.start <= last.end) {
+      last.end = Math.max(last.end, iv.end);
+    } else {
+      merged.push({ ...iv });
+    }
+  }
+  return merged;
+}
+
 function subtractInterval(intervals: Interval[], block: Interval): Interval[] {
   const result: Interval[] = [];
   for (const iv of intervals) {
@@ -48,12 +64,12 @@ export async function getOpenIntervalsForDate(dateISO: string): Promise<Interval
 
   if (exceptions.some((e) => e.isFullDayBlock)) return [];
 
-  let intervals: Interval[] = rules.map((r) => ({ start: r.startMinute, end: r.endMinute }));
+  let intervals: Interval[] = mergeIntervals(rules.map((r) => ({ start: r.startMinute, end: r.endMinute })));
 
   for (const exception of exceptions) {
     if (exception.startMinute == null || exception.endMinute == null) continue;
     if (exception.kind === "extra_availability") {
-      intervals.push({ start: exception.startMinute, end: exception.endMinute });
+      intervals = mergeIntervals([...intervals, { start: exception.startMinute, end: exception.endMinute }]);
     } else if (exception.kind === "block") {
       intervals = subtractInterval(intervals, {
         start: exception.startMinute,

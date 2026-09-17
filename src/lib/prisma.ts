@@ -13,3 +13,11 @@ export const prisma =
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
+
+// SQLite (local dev/tests) allows only one writer at a time. Without this,
+// a query that arrives while another write holds the file lock fails
+// immediately with SQLITE_BUSY instead of waiting briefly for its turn.
+// Postgres (production) ignores this — it has real row-level locking.
+if (process.env.DATABASE_URL?.startsWith("file:")) {
+  void prisma.$executeRawUnsafe("PRAGMA busy_timeout = 10000;");
+}

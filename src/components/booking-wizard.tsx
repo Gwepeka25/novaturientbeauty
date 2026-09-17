@@ -144,7 +144,9 @@ export function BookingWizard({
 
       {step === "format" && (
         <fieldset>
-          <legend className="serif step-heading">How would you like to meet?</legend>
+          <legend className="step-heading-legend">
+            <h2 className="serif step-heading">How would you like to meet?</h2>
+          </legend>
           <div className="choice-grid">
             <button
               type="button"
@@ -176,7 +178,9 @@ export function BookingWizard({
 
       {step === "service" && format && (
         <fieldset>
-          <legend className="serif step-heading">Choose a session type</legend>
+          <legend className="step-heading-legend">
+            <h2 className="serif step-heading">Choose a session type</h2>
+          </legend>
           <div className="choice-list">
             {availableServices.map((s) => (
               <button
@@ -213,7 +217,9 @@ export function BookingWizard({
 
       {step === "datetime" && service && (
         <fieldset>
-          <legend className="serif step-heading">Choose a date and time</legend>
+          <legend className="step-heading-legend">
+            <h2 className="serif step-heading">Choose a date and time</h2>
+          </legend>
           <div className="date-chip-row" role="listbox" aria-label="Choose a date">
             {dateOptions.map((d) => (
               <button
@@ -272,7 +278,9 @@ export function BookingWizard({
 
       {step === "details" && (
         <fieldset>
-          <legend className="serif step-heading">Your details</legend>
+          <legend className="step-heading-legend">
+            <h2 className="serif step-heading">Your details</h2>
+          </legend>
           <div className="form-field">
             <label htmlFor="clientName">Name</label>
             <input

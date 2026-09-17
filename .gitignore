@@ -12,9 +12,11 @@ coverage/
 *.tsbuildinfo
 next-env.d.ts
 
-# SQLite local dev database (Prisma migrations themselves ARE tracked)
+# SQLite local dev/test databases (Prisma migrations themselves ARE tracked)
 prisma/dev.db
 prisma/dev.db-journal
+prisma/test.db
+prisma/test.db-journal
 
 # Playwright
 /test-results/

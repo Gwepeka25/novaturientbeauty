@@ -7,9 +7,9 @@ export default async function AdminDashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Middleware already blocks unauthenticated access to /admin/*; this is a
+  // proxy.ts already blocks unauthenticated access to /admin/*; this is a
   // defense-in-depth check so a server component never renders without a
-  // valid session even if middleware config ever changes.
+  // valid session even if that config ever changes.
   const session = await getSession();
   if (!session) redirect("/admin/login");
 

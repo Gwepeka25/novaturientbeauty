@@ -32,46 +32,80 @@ export async function createAppointment(input: CreateAppointmentInput) {
     Date.now() + MANAGE_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000,
   );
 
-  return prisma.$transaction(async (tx) => {
-    const conflict = await tx.appointment.findFirst({
-      where: {
-        status: { in: ["pending", "confirmed"] },
-        startsAt: { lt: endUtc },
-        endsAt: { gt: input.startUtc },
+  try {
+    return await prisma.$transaction(
+      async (tx) => {
+        const conflict = await tx.appointment.findFirst({
+          where: {
+            status: { in: ["pending", "confirmed"] },
+            startsAt: { lt: endUtc },
+            endsAt: { gt: input.startUtc },
+          },
+        });
+        if (conflict) throw new SlotUnavailableError();
+
+        const stillAvailable = await isSlotStillAvailable(input.serviceId, input.startUtc);
+        if (!stillAvailable) throw new SlotUnavailableError();
+
+        const appointment = await tx.appointment.create({
+          data: {
+            publicCode,
+            serviceId: input.serviceId,
+            format: input.format,
+            startsAt: input.startUtc,
+            endsAt: endUtc,
+            status: "confirmed",
+            clientName: input.clientName,
+            clientEmail: input.clientEmail,
+            clientPhone: input.clientPhone || null,
+            clientNote: input.clientNote || null,
+            manageToken,
+            manageTokenExp,
+          },
+        });
+
+        await tx.auditEvent.create({
+          data: {
+            action: "appointment.created",
+            appointmentId: appointment.id,
+            metadata: JSON.stringify({ format: input.format, serviceId: input.serviceId }),
+          },
+        });
+
+        return appointment;
       },
-    });
-    if (conflict) throw new SlotUnavailableError();
+      // Generous timeout: under heavy contention for the same slot, losing
+      // requests should surface as "someone else just booked this" rather
+      // than a raw transaction-timeout error.
+      { maxWait: 10_000, timeout: 10_000 },
+    );
+  } catch (error) {
+    if (error instanceof SlotUnavailableError) throw error;
+    if (isTransactionContentionError(error)) {
+      // Prisma P2028 (transaction expired/closed) or P2034 (write conflict /
+      // deadlock, Postgres/CockroachDB) under heavy concurrent load for the
+      // same slot. Functionally the same outcome for the caller as losing
+      // the race deliberately — but log it, since sustained contention on
+      // one slot is worth knowing about.
+      console.warn("Booking transaction contention:", error);
+      throw new SlotUnavailableError();
+    }
+    throw error;
+  }
+}
 
-    const stillAvailable = await isSlotStillAvailable(input.serviceId, input.startUtc);
-    if (!stillAvailable) throw new SlotUnavailableError();
-
-    const appointment = await tx.appointment.create({
-      data: {
-        publicCode,
-        serviceId: input.serviceId,
-        format: input.format,
-        startsAt: input.startUtc,
-        endsAt: endUtc,
-        status: "confirmed",
-        clientName: input.clientName,
-        clientEmail: input.clientEmail,
-        clientPhone: input.clientPhone || null,
-        clientNote: input.clientNote || null,
-        manageToken,
-        manageTokenExp,
-      },
-    });
-
-    await tx.auditEvent.create({
-      data: {
-        action: "appointment.created",
-        appointmentId: appointment.id,
-        metadata: JSON.stringify({ format: input.format, serviceId: input.serviceId }),
-      },
-    });
-
-    return appointment;
-  });
+function isTransactionContentionError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    // P2028: transaction expired/closed. P2034: write conflict or deadlock
+    // (Postgres/CockroachDB). P1008: socket/query timeout — on SQLite this
+    // is what surfaces when several transactions queue for its single
+    // writer lock at once (harmless in production: Postgres has real
+    // row-level locking and doesn't serialize writers this way).
+    (error.code === "P2028" || error.code === "P2034" || error.code === "P1008")
+  );
 }
 
 function generatePublicCode(): string {

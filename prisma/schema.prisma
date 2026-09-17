@@ -41,10 +41,12 @@ model Service {
   appointments Appointment[]
 }
 
-// Recurring weekly availability, e.g. "Tuesdays 09:00-17:00".
+// Recurring weekly availability, e.g. "Tuesdays 09:00-17:00". One row per
+// weekday — enforced at the DB level so a double-submitted admin form can
+// never create overlapping/duplicate hours for the same day.
 model AvailabilityRule {
   id          String   @id @default(cuid())
-  weekday     Int // 0 = Sunday ... 6 = Saturday
+  weekday     Int      @unique // 0 = Sunday ... 6 = Saturday
   startMinute Int // minutes from midnight, local Europe/Brussels time
   endMinute   Int
   active      Boolean  @default(true)
