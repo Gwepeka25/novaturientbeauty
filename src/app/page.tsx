@@ -4,10 +4,10 @@ import { formatFeeCents } from "@/lib/services-data";
 import { getContentMany } from "@/lib/content";
 import { Reveal } from "@/components/reveal";
 import { BookingCTA } from "@/components/booking-cta";
-import { LocaleSwitcher } from "@/components/locale-switcher";
+import { HomeHeader } from "@/components/home-header";
 import { getLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
-import { BRAND_NAME, PRACTITIONER_FULL, PRACTITIONER_NAME, PRACTITIONER_TITLE } from "@/lib/site-config";
+import { PRACTITIONER_NAME, PRACTITIONER_TITLE } from "@/lib/site-config";
 import {
   IconBanknote,
   IconUserRound,
@@ -61,26 +61,7 @@ export default async function HomePage() {
         className="hero-immersive"
         style={{ backgroundImage: "url('/images/michelle-office.jpg')" }}
       >
-        <header className="hero-header wrap">
-          <Link className="brand" href="/">
-            <b className="serif">{BRAND_NAME}</b>
-            <small>{PRACTITIONER_FULL}</small>
-          </Link>
-          <nav className="site-nav" aria-label="Primary">
-            <Link href="/about">{t(locale, "nav_about")}</Link>
-            <Link href="/sessions">{t(locale, "nav_sessions")}</Link>
-            <Link href="/reviews">{t(locale, "nav_reviews")}</Link>
-            <Link href="/contact">{t(locale, "nav_contact")}</Link>
-            <a href="#ps-process">{t(locale, "nav_what_to_expect")}</a>
-            <a href="#ps-fees">{t(locale, "nav_fees")}</a>
-          </nav>
-          <div className="header-right">
-            <LocaleSwitcher locale={locale} />
-            <Link className="button" href="/book">
-              {t(locale, "nav_book")}
-            </Link>
-          </div>
-        </header>
+        <HomeHeader locale={locale} />
 
         <div className="wrap hero-content">
           <div>
