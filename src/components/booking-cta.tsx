@@ -1,11 +1,14 @@
 import Link from "next/link";
+import { t, type Locale } from "@/lib/i18n";
 
 export function BookingCTA({
-  eyebrow = "Whenever you feel ready",
-  heading = "There is a place for you here.",
-  body = "Choose an in-person or online appointment and begin with one honest conversation.",
-  ctaLabel = "View available appointments",
+  locale,
+  eyebrow,
+  heading,
+  body,
+  ctaLabel,
 }: {
+  locale: Locale;
   eyebrow?: string;
   heading?: string;
   body?: string;
@@ -13,11 +16,11 @@ export function BookingCTA({
 }) {
   return (
     <section className="wrap final">
-      <span className="eyebrow">{eyebrow}</span>
-      <h2 className="serif">{heading}</h2>
-      <p>{body}</p>
+      <span className="eyebrow">{eyebrow ?? t(locale, "cta_default_eyebrow")}</span>
+      <h2 className="serif">{heading ?? t(locale, "cta_default_heading")}</h2>
+      <p>{body ?? t(locale, "cta_default_body")}</p>
       <Link className="button" href="/book">
-        {ctaLabel}
+        {ctaLabel ?? t(locale, "cta_default_label")}
       </Link>
     </section>
   );

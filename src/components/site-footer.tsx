@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BRAND_NAME, BRAND_TAGLINE, PRACTITIONER_FULL } from "@/lib/site-config";
+import { t, type Locale } from "@/lib/i18n";
 
-export function SiteFooter() {
+export function SiteFooter({ locale }: { locale: Locale }) {
   const pathname = usePathname();
   if (pathname?.startsWith("/admin")) return null;
 
@@ -16,11 +17,11 @@ export function SiteFooter() {
       </span>
       <nav aria-label="Footer">
         <span>Rue Amélie Gomand 45, Jette</span>
-        <Link href="/privacy">Privacy</Link>
-        <Link href="/terms">Terms</Link>
-        <Link href="/contact">Contact</Link>
-        <Link href="/reviews">Reviews</Link>
-        <Link href="/portal">Client portal</Link>
+        <Link href="/privacy">{t(locale, "footer_privacy")}</Link>
+        <Link href="/terms">{t(locale, "footer_terms")}</Link>
+        <Link href="/contact">{t(locale, "footer_contact")}</Link>
+        <Link href="/reviews">{t(locale, "footer_reviews")}</Link>
+        <Link href="/portal">{t(locale, "footer_portal")}</Link>
       </nav>
     </footer>
   );

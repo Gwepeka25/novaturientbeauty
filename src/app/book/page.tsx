@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { todayLocalISO, addDaysLocalISO } from "@/lib/timezone";
 import { BookingWizard } from "@/components/booking-wizard";
+import { getLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BookPage() {
+  const locale = await getLocale();
   const [services, settings] = await Promise.all([
     prisma.service.findMany({ where: { active: true }, orderBy: { displayOrder: "asc" } }),
     prisma.schedulingSettings.findFirst(),
@@ -22,10 +25,11 @@ export default async function BookPage() {
   return (
     <section className="wrap section booking-section">
       <div className="big-title">
-        <small>Book a session</small>
-        <h1 className="serif">A few private steps, at your pace.</h1>
+        <small>{t(locale, "book_h1_small")}</small>
+        <h1 className="serif">{t(locale, "book_h1")}</h1>
       </div>
       <BookingWizard
+        locale={locale}
         services={services.map((s) => ({
           id: s.id,
           name: s.name,

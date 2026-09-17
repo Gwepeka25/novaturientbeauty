@@ -4,21 +4,23 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { BRAND_NAME, PRACTITIONER_FULL } from "@/lib/site-config";
+import { t, type Locale } from "@/lib/i18n";
+import { LocaleSwitcher } from "@/components/locale-switcher";
 
-const NAV_LINKS = [
-  { href: "/about", label: "About" },
-  { href: "/sessions", label: "Sessions" },
-  { href: "/reviews", label: "Reviews" },
-  { href: "/contact", label: "Contact" },
-];
-
-export function SiteHeader() {
+export function SiteHeader({ locale }: { locale: Locale }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
   // The homepage renders its own header embedded in the immersive hero
   // photo (see app/page.tsx); admin has its own chrome entirely.
   if (pathname === "/" || pathname?.startsWith("/admin")) return null;
+
+  const NAV_LINKS = [
+    { href: "/about", label: t(locale, "nav_about") },
+    { href: "/sessions", label: t(locale, "nav_sessions") },
+    { href: "/reviews", label: t(locale, "nav_reviews") },
+    { href: "/contact", label: t(locale, "nav_contact") },
+  ];
 
   return (
     <header className="site-header wrap" style={{ position: "relative" }}>
@@ -40,9 +42,9 @@ export function SiteHeader() {
       </nav>
 
       <div className="header-right">
-        <span aria-hidden="true">EN · FR · NL</span>
+        <LocaleSwitcher locale={locale} />
         <Link className="button" href="/book">
-          Book
+          {t(locale, "nav_book")}
         </Link>
         <button
           type="button"

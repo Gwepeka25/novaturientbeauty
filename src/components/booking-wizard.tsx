@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { formatFeeCents } from "@/lib/services-data";
+import { t, LOCALE_INTL_TAG, type Locale } from "@/lib/i18n";
 
 type Service = {
   id: string;
@@ -18,25 +19,28 @@ type Slot = { startUtc: string; label: string };
 
 type Step = "format" | "service" | "datetime" | "details" | "review" | "success";
 
-const STEP_LABELS: Record<Step, string> = {
-  format: "Format",
-  service: "Service",
-  datetime: "Date & time",
-  details: "Your details",
-  review: "Review",
-  success: "Done",
-};
 const STEP_ORDER: Step[] = ["format", "service", "datetime", "details", "review"];
 
 export function BookingWizard({
+  locale,
   services,
   minDate,
   maxDate,
 }: {
+  locale: Locale;
   services: Service[];
   minDate: string;
   maxDate: string;
 }) {
+  const STEP_LABELS: Record<Step, string> = {
+    format: t(locale, "book_step_format"),
+    service: t(locale, "book_step_service"),
+    datetime: t(locale, "book_step_datetime"),
+    details: t(locale, "book_step_details"),
+    review: t(locale, "book_step_review"),
+    success: t(locale, "book_step_done"),
+  };
+
   const [step, setStep] = useState<Step>("format");
   const [format, setFormat] = useState<"in_person" | "online" | null>(null);
   const [serviceId, setServiceId] = useState<string | null>(null);
@@ -64,7 +68,7 @@ export function BookingWizard({
     [services, format],
   );
 
-  const dateOptions = useMemo(() => buildDateOptions(minDate, maxDate), [minDate, maxDate]);
+  const dateOptions = useMemo(() => buildDateOptions(minDate, maxDate, locale), [minDate, maxDate, locale]);
 
   async function loadSlots(date: string, fmt: "in_person" | "online") {
     if (!service) return;
@@ -135,18 +139,15 @@ export function BookingWizard({
   if (step === "success" && confirmation) {
     return (
       <div className="booking-panel" role="status" aria-live="polite">
-        <div className="eyebrow">Booked</div>
-        <h2 className="serif">Your session is confirmed.</h2>
+        <div className="eyebrow">{t(locale, "book_success_eyebrow")}</div>
+        <h2 className="serif">{t(locale, "book_success_heading")}</h2>
         <p>
-          {confirmation.startsAtLabel} (Brussels time). Reference{" "}
+          {confirmation.startsAtLabel} ({t(locale, "book_success_timezone")}). {t(locale, "book_success_reference")}{" "}
           <strong>{confirmation.publicCode}</strong>.
         </p>
-        <p>
-          We&rsquo;ve sent a confirmation to your email with a private link to
-          reschedule or cancel if you need to.
-        </p>
+        <p>{t(locale, "book_success_body")}</p>
         <Link className="button" href="/">
-          Back to home
+          {t(locale, "book_success_home")}
         </Link>
       </div>
     );
@@ -165,7 +166,7 @@ export function BookingWizard({
       {step === "format" && (
         <fieldset>
           <legend className="step-heading-legend">
-            <h2 className="serif step-heading">How would you like to meet?</h2>
+            <h2 className="serif step-heading">{t(locale, "book_format_heading")}</h2>
           </legend>
           <div className="choice-grid">
             <button
@@ -177,8 +178,8 @@ export function BookingWizard({
                 setStep("service");
               }}
             >
-              <span className="serif">In person</span>
-              <span>Rue Amélie Gomand 45, Jette</span>
+              <span className="serif">{t(locale, "book_format_in_person")}</span>
+              <span>{t(locale, "book_format_in_person_address")}</span>
             </button>
             <button
               type="button"
@@ -189,8 +190,8 @@ export function BookingWizard({
                 setStep("service");
               }}
             >
-              <span className="serif">Online</span>
-              <span>A private video session</span>
+              <span className="serif">{t(locale, "book_format_online")}</span>
+              <span>{t(locale, "book_format_online_body")}</span>
             </button>
           </div>
         </fieldset>
@@ -199,7 +200,7 @@ export function BookingWizard({
       {step === "service" && format && (
         <fieldset>
           <legend className="step-heading-legend">
-            <h2 className="serif step-heading">Choose a session type</h2>
+            <h2 className="serif step-heading">{t(locale, "book_service_heading")}</h2>
           </legend>
           <div className="choice-list">
             {availableServices.map((s) => (
@@ -214,14 +215,14 @@ export function BookingWizard({
                   <small>{s.description}</small>
                 </span>
                 <span className="choice-row-fee">
-                  {formatFeeCents(s.priceCents, s.currency)} · {s.durationMin} min
+                  {formatFeeCents(s.priceCents, s.currency)} · {s.durationMin} {t(locale, "sessions_min_suffix")}
                 </span>
               </button>
             ))}
           </div>
           <div className="step-actions">
             <button type="button" className="button button-outline" onClick={() => setStep("format")}>
-              Back
+              {t(locale, "common_back")}
             </button>
             <button
               type="button"
@@ -229,7 +230,7 @@ export function BookingWizard({
               disabled={!serviceId}
               onClick={() => setStep("datetime")}
             >
-              Continue
+              {t(locale, "common_continue")}
             </button>
           </div>
         </fieldset>
@@ -238,7 +239,7 @@ export function BookingWizard({
       {step === "datetime" && service && format && (
         <fieldset>
           <legend className="step-heading-legend">
-            <h2 className="serif step-heading">Choose a date and time</h2>
+            <h2 className="serif step-heading">{t(locale, "book_datetime_heading")}</h2>
           </legend>
           <div className="date-chip-row" role="listbox" aria-label="Choose a date">
             {dateOptions.map((d) => (
@@ -265,16 +266,12 @@ export function BookingWizard({
               {slotsLoading && <p>Loading available times…</p>}
               {!slotsLoading && slots.length === 0 && (
                 <div className="no-slots-message">
-                  <p>
-                    No {format === "in_person" ? "in-person" : "online"} times available that
-                    day. Please choose another date.
-                  </p>
+                  <p>{t(locale, format === "in_person" ? "book_no_slots_in_person" : "book_no_slots_online")}</p>
                   {altFormatAvailable && (
                     <p>
-                      {format === "in_person" ? "Online" : "In-person"} sessions are still open
-                      that day.{" "}
+                      {t(locale, format === "in_person" ? "book_alt_available_online" : "book_alt_available_in_person")}{" "}
                       <button type="button" className="link-button" onClick={switchFormat}>
-                        Switch to {format === "in_person" ? "online" : "in person"}
+                        {t(locale, format === "in_person" ? "book_switch_to_online" : "book_switch_to_in_person")}
                       </button>
                     </p>
                   )}
@@ -296,7 +293,7 @@ export function BookingWizard({
 
           <div className="step-actions">
             <button type="button" className="button button-outline" onClick={() => setStep("service")}>
-              Back
+              {t(locale, "common_back")}
             </button>
             <button
               type="button"
@@ -304,7 +301,7 @@ export function BookingWizard({
               disabled={!selectedSlot}
               onClick={() => setStep("details")}
             >
-              Continue
+              {t(locale, "common_continue")}
             </button>
           </div>
         </fieldset>
@@ -313,10 +310,10 @@ export function BookingWizard({
       {step === "details" && (
         <fieldset>
           <legend className="step-heading-legend">
-            <h2 className="serif step-heading">Your details</h2>
+            <h2 className="serif step-heading">{t(locale, "book_details_heading")}</h2>
           </legend>
           <div className="form-field">
-            <label htmlFor="clientName">Name</label>
+            <label htmlFor="clientName">{t(locale, "book_label_name")}</label>
             <input
               id="clientName"
               type="text"
@@ -327,7 +324,7 @@ export function BookingWizard({
             />
           </div>
           <div className="form-field">
-            <label htmlFor="clientEmail">Email</label>
+            <label htmlFor="clientEmail">{t(locale, "book_label_email")}</label>
             <input
               id="clientEmail"
               type="email"
@@ -338,7 +335,7 @@ export function BookingWizard({
             />
           </div>
           <div className="form-field">
-            <label htmlFor="clientPhone">Phone (optional)</label>
+            <label htmlFor="clientPhone">{t(locale, "book_label_phone")}</label>
             <input
               id="clientPhone"
               type="tel"
@@ -348,7 +345,7 @@ export function BookingWizard({
             />
           </div>
           <div className="form-field">
-            <label htmlFor="clientNote">Anything you&rsquo;d like to add? (optional)</label>
+            <label htmlFor="clientNote">{t(locale, "book_label_note")}</label>
             <textarea
               id="clientNote"
               rows={3}
@@ -358,7 +355,7 @@ export function BookingWizard({
             />
           </div>
           <div className="honeypot-field" aria-hidden="true">
-            <label htmlFor="website">Leave this field empty</label>
+            <label htmlFor="website">{t(locale, "book_label_honeypot")}</label>
             <input
               id="website"
               type="text"
@@ -370,7 +367,7 @@ export function BookingWizard({
           </div>
           <div className="step-actions">
             <button type="button" className="button button-outline" onClick={() => setStep("datetime")}>
-              Back
+              {t(locale, "common_back")}
             </button>
             <button
               type="button"
@@ -378,7 +375,7 @@ export function BookingWizard({
               disabled={!clientName.trim() || !clientEmail.trim()}
               onClick={() => setStep("review")}
             >
-              Continue
+              {t(locale, "common_continue")}
             </button>
           </div>
         </fieldset>
@@ -386,50 +383,50 @@ export function BookingWizard({
 
       {step === "review" && service && selectedSlot && format && (
         <div>
-          <h2 className="serif step-heading">Review &amp; confirm</h2>
+          <h2 className="serif step-heading">{t(locale, "book_review_heading")}</h2>
           <dl className="review-summary">
             <div>
-              <dt>Format</dt>
-              <dd>{format === "in_person" ? "In person · Rue Amélie Gomand 45, Jette" : "Online"}</dd>
+              <dt>{t(locale, "book_review_format")}</dt>
+              <dd>{t(locale, format === "in_person" ? "book_review_format_in_person" : "book_review_format_online")}</dd>
             </div>
             <div>
-              <dt>Session</dt>
+              <dt>{t(locale, "book_review_session")}</dt>
               <dd>
                 {service.name} · {formatFeeCents(service.priceCents, service.currency)} ·{" "}
-                {service.durationMin} min
+                {service.durationMin} {t(locale, "sessions_min_suffix")}
               </dd>
             </div>
             <div>
-              <dt>When</dt>
-              <dd>{formatSlotForReview(selectedSlot.startUtc)} (Brussels time)</dd>
+              <dt>{t(locale, "book_review_when")}</dt>
+              <dd>
+                {formatSlotForReview(selectedSlot.startUtc, locale)} ({t(locale, "book_success_timezone")})
+              </dd>
             </div>
             <div>
-              <dt>Contact</dt>
+              <dt>{t(locale, "book_review_contact")}</dt>
               <dd>
                 {clientName} · {clientEmail}
               </dd>
             </div>
           </dl>
 
-          <div className="cash">
-            Payment is by cash at your in-person session. Online-session
-            arrangements are confirmed privately after booking.
-          </div>
+          <div className="cash">{t(locale, "book_review_cash_note")}</div>
 
           <p className="review-legal">
-            By confirming, you agree to our{" "}
-            <Link href="/terms">cancellation policy</Link> and{" "}
-            <Link href="/privacy">privacy policy</Link>.
+            {t(locale, "book_review_legal_prefix")}{" "}
+            <Link href="/terms">{t(locale, "book_review_legal_cancellation")}</Link>{" "}
+            {t(locale, "book_review_legal_and")}{" "}
+            <Link href="/privacy">{t(locale, "book_review_legal_privacy")}</Link>.
           </p>
 
           {error && <p className="form-error" role="alert">{error}</p>}
 
           <div className="step-actions">
             <button type="button" className="button button-outline" onClick={() => setStep("details")}>
-              Back
+              {t(locale, "common_back")}
             </button>
             <button type="button" className="button" onClick={handleSubmit} disabled={submitting}>
-              {submitting ? "Confirming…" : "Confirm booking"}
+              {submitting ? t(locale, "book_confirming") : t(locale, "book_confirm")}
             </button>
           </div>
         </div>
@@ -438,8 +435,8 @@ export function BookingWizard({
   );
 }
 
-function formatSlotForReview(startUtc: string): string {
-  return new Date(startUtc).toLocaleString("en-GB", {
+function formatSlotForReview(startUtc: string, locale: Locale): string {
+  return new Date(startUtc).toLocaleString(LOCALE_INTL_TAG[locale], {
     timeZone: "Europe/Brussels",
     weekday: "long",
     day: "numeric",
@@ -450,18 +447,19 @@ function formatSlotForReview(startUtc: string): string {
   });
 }
 
-function buildDateOptions(minDate: string, maxDate: string) {
+function buildDateOptions(minDate: string, maxDate: string, locale: Locale) {
   const options: { iso: string; weekday: string; day: string; month: string }[] = [];
   const start = new Date(`${minDate}T00:00:00`);
   const end = new Date(`${maxDate}T00:00:00`);
   const cursor = new Date(start);
+  const tag = LOCALE_INTL_TAG[locale];
   while (cursor <= end && options.length < 21) {
     const iso = cursor.toISOString().slice(0, 10);
     options.push({
       iso,
-      weekday: cursor.toLocaleDateString("en-GB", { weekday: "short" }),
-      day: cursor.toLocaleDateString("en-GB", { day: "numeric" }),
-      month: cursor.toLocaleDateString("en-GB", { month: "short" }),
+      weekday: cursor.toLocaleDateString(tag, { weekday: "short" }),
+      day: cursor.toLocaleDateString(tag, { day: "numeric" }),
+      month: cursor.toLocaleDateString(tag, { month: "short" }),
     });
     cursor.setDate(cursor.getDate() + 1);
   }

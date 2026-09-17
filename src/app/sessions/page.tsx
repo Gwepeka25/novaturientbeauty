@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { formatFeeCents } from "@/lib/services-data";
 import { getContent } from "@/lib/content";
 import { BookingCTA } from "@/components/booking-cta";
+import { getLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 import { IconBanknote, IconMapPin, IconVideo } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
@@ -12,42 +14,41 @@ export const metadata: Metadata = {
   description: "Session formats, fees, and what to expect.",
 };
 
-const WHAT_TO_EXPECT = [
-  "Book online in a few minutes — choose in person or online, then a time that works for you.",
-  "Receive a discreet confirmation with practical details. Nothing revealing appears in the subject line.",
-  "Arrive (or log in) whenever you feel ready. There is no need to explain everything beforehand.",
-  "Pay in cash at your in-person session, or agree an arrangement privately for online sessions.",
-];
-
 export default async function SessionsPage() {
+  const locale = await getLocale();
+  const WHAT_TO_EXPECT = [
+    t(locale, "sessions_expect_1"),
+    t(locale, "sessions_expect_2"),
+    t(locale, "sessions_expect_3"),
+    t(locale, "sessions_expect_4"),
+  ];
+
   const [services, cashNote] = await Promise.all([
     prisma.service.findMany({ where: { active: true }, orderBy: { displayOrder: "asc" } }),
-    getContent("sessions.cash_note"),
+    getContent("sessions.cash_note", locale),
   ]);
 
   return (
     <>
       <section className="wrap section">
         <div className="big-title">
-          <small>Sessions</small>
-          <h1 className="serif">Formats, fees, and what to expect.</h1>
+          <small>{t(locale, "sessions_small")}</small>
+          <h1 className="serif">{t(locale, "sessions_h1")}</h1>
         </div>
 
         <div className="formats-grid">
           <div className="format-card">
-            <span className="eyebrow">In person</span>
-            <h3 className="serif">Rue Amélie Gomand 45, Jette</h3>
+            <span className="eyebrow">{t(locale, "sessions_in_person_eyebrow")}</span>
+            <h3 className="serif">{t(locale, "book_format_in_person_address")}</h3>
             <p>
-              <IconMapPin className="icon" /> A warm, private room, intentionally
-              uncomplicated so the focus can remain on you.
+              <IconMapPin className="icon" /> {t(locale, "sessions_in_person_body")}
             </p>
           </div>
           <div className="format-card">
-            <span className="eyebrow">Online</span>
-            <h3 className="serif">A private video session</h3>
+            <span className="eyebrow">{t(locale, "sessions_online_eyebrow")}</span>
+            <h3 className="serif">{t(locale, "sessions_online_title")}</h3>
             <p>
-              <IconVideo className="icon" /> The secure meeting link is sent only
-              to you, after your booking is confirmed.
+              <IconVideo className="icon" /> {t(locale, "sessions_online_body")}
             </p>
           </div>
         </div>
@@ -56,8 +57,8 @@ export default async function SessionsPage() {
       <section className="menu">
         <div className="wrap section menu-grid">
           <div className="menu-intro">
-            <div className="eyebrow">Fees</div>
-            <h2 className="serif">Time and care, clearly offered.</h2>
+            <div className="eyebrow">{t(locale, "sessions_fees_eyebrow")}</div>
+            <h2 className="serif">{t(locale, "sessions_fees_heading")}</h2>
             <div className="cash">
               <IconBanknote className="icon" />
               {cashNote}
@@ -69,7 +70,9 @@ export default async function SessionsPage() {
                 <h3>{service.name}</h3>
                 <b>{formatFeeCents(service.priceCents, service.currency)}</b>
                 <p>{service.description}</p>
-                <small>{service.durationMin} min</small>
+                <small>
+                  {service.durationMin} {t(locale, "sessions_min_suffix")}
+                </small>
               </div>
             ))}
           </div>
@@ -78,8 +81,8 @@ export default async function SessionsPage() {
 
       <section className="wrap section">
         <div className="big-title">
-          <small>What to expect</small>
-          <h2 className="serif">A straightforward path to your first session.</h2>
+          <small>{t(locale, "sessions_expect_small")}</small>
+          <h2 className="serif">{t(locale, "sessions_expect_heading")}</h2>
         </div>
         <ol className="expect-list">
           {WHAT_TO_EXPECT.map((step) => (
@@ -90,7 +93,7 @@ export default async function SessionsPage() {
         </ol>
       </section>
 
-      <BookingCTA />
+      <BookingCTA locale={locale} />
     </>
   );
 }

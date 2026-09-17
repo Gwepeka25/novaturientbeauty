@@ -3,6 +3,8 @@ import { getContentMany } from "@/lib/content";
 import { BookingCTA } from "@/components/booking-cta";
 import { IconMapPin, IconShieldCheck } from "@/components/icons";
 import { PRACTITIONER_NAME } from "@/lib/site-config";
+import { getLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -12,28 +14,23 @@ export const metadata: Metadata = {
 };
 
 export default async function ContactPage() {
-  const content = await getContentMany([
-    "contact.address",
-    "contact.email",
-    "contact.phone",
-    "contact.note",
-  ]);
+  const locale = await getLocale();
+  const content = await getContentMany(
+    ["contact.address", "contact.email", "contact.phone", "contact.note"],
+    locale,
+  );
 
   return (
     <>
       <section className="wrap section">
         <div className="big-title">
-          <small>Contact</small>
-          <h1 className="serif">Practical details, kept simple.</h1>
+          <small>{t(locale, "contact_small")}</small>
+          <h1 className="serif">{t(locale, "contact_h1")}</h1>
         </div>
 
         <div className="contact-grid">
           <div>
-            <p>
-              For booking, please use the booking page rather than email —
-              it&rsquo;s faster and keeps your details private. For anything
-              else, reach out below.
-            </p>
+            <p>{t(locale, "contact_intro")}</p>
             <ul className="contact-list">
               <li>
                 <IconMapPin className="icon" />
@@ -59,18 +56,14 @@ export default async function ContactPage() {
             </div>
           </div>
           <div className="format-card">
-            <span className="eyebrow">Discretion, by default</span>
-            <h3 className="serif">Your privacy is the starting point.</h3>
-            <p>
-              Contact details are never shared, and nothing about your
-              appointment appears in email subject lines, calendar titles or
-              analytics.
-            </p>
+            <span className="eyebrow">{t(locale, "contact_discretion_eyebrow")}</span>
+            <h3 className="serif">{t(locale, "contact_discretion_heading")}</h3>
+            <p>{t(locale, "contact_discretion_body")}</p>
           </div>
         </div>
       </section>
 
-      <BookingCTA />
+      <BookingCTA locale={locale} />
     </>
   );
 }

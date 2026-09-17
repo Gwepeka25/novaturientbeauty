@@ -3,6 +3,7 @@ import { DM_Sans, Instrument_Serif } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { BRAND_NAME, PRACTITIONER_FULL } from "@/lib/site-config";
+import { getLocale } from "@/lib/locale";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -37,10 +38,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const locale = await getLocale();
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${dmSans.variable} ${instrumentSerif.variable}`}
       suppressHydrationWarning
     >
@@ -48,9 +50,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <a href="#main-content" className="skip-link">
           Skip to content
         </a>
-        <SiteHeader />
+        <SiteHeader locale={locale} />
         <main id="main-content">{children}</main>
-        <SiteFooter />
+        <SiteFooter locale={locale} />
       </body>
     </html>
   );

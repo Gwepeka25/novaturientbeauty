@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { BookingCTA } from "@/components/booking-cta";
+import { getLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ReviewsPage() {
+  const locale = await getLocale();
   const reviews = await prisma.review.findMany({
     where: { status: "approved", consentPublic: true },
     orderBy: [{ isLegacy: "desc" }, { publishOrder: "asc" }, { createdAt: "desc" }],
@@ -19,15 +22,10 @@ export default async function ReviewsPage() {
     <>
       <section className="wrap section">
         <div className="big-title">
-          <small>Reviews</small>
-          <h1 className="serif">Shared with consent, never assumed.</h1>
+          <small>{t(locale, "reviews_small")}</small>
+          <h1 className="serif">{t(locale, "reviews_h1")}</h1>
         </div>
-        <p style={{ color: "var(--muted)", maxWidth: "640px" }}>
-          Only clients who completed a session and explicitly chose to
-          publish a review appear here. Reviews never reveal appointment
-          type, contact details, or anything that could identify who wrote
-          them unless they chose to share their first name.
-        </p>
+        <p style={{ color: "var(--muted)", maxWidth: "640px" }}>{t(locale, "reviews_intro")}</p>
 
         {reviews.length > 0 ? (
           <ul className="reviews-list">
@@ -37,32 +35,25 @@ export default async function ReviewsPage() {
                 <small>
                   {review.isLegacy
                     ? review.displayName
-                    : `${review.displayName ?? "A client"} · Verified after a completed session`}
+                    : `${review.displayName ?? "A client"} · ${t(locale, "reviews_verified")}`}
                 </small>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="review-empty">
-            No reviews are published yet. Clients are invited to leave one
-            after a completed session.
-          </p>
+          <p className="review-empty">{t(locale, "reviews_empty")}</p>
         )}
       </section>
 
       <section id="leave-a-review" className="wrap section credentials-section">
-        <div className="eyebrow">Leaving a review</div>
-        <h2 className="serif">Reviews are by invitation only.</h2>
+        <div className="eyebrow">{t(locale, "reviews_leave_eyebrow")}</div>
+        <h2 className="serif">{t(locale, "reviews_leave_heading")}</h2>
         <p style={{ color: "var(--muted)", maxWidth: "640px", marginTop: "10px" }}>
-          After a completed appointment, you&rsquo;ll receive a private,
-          single-use link to share feedback if you&rsquo;d like to. You choose
-          whether it&rsquo;s published, and how you&rsquo;re identified — first
-          name, initials, or fully anonymous. You can request to withdraw a
-          published review at any time by replying to that email.
+          {t(locale, "reviews_leave_body")}
         </p>
       </section>
 
-      <BookingCTA />
+      <BookingCTA locale={locale} />
     </>
   );
 }
