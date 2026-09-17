@@ -279,7 +279,12 @@ button {
 
 .hero-header {
   position: relative;
-  z-index: 2;
+  /* Must outrank .hero-content's z-index: 2 — otherwise, since both are
+     positioned with an explicit z-index, a tie is broken by DOM order and
+     .hero-content (which comes later in the markup) would paint over the
+     mobile-nav dropdown despite its own higher z-index, because that
+     dropdown is trapped inside this element's own stacking context. */
+  z-index: 5;
   display: flex;
   align-items: center;
   justify-content: space-between;
