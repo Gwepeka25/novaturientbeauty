@@ -89,6 +89,11 @@ model Appointment {
   startsAt         DateTime // stored in UTC
   endsAt           DateTime // stored in UTC, startsAt + duration
   status           String   @default("pending") // pending|confirmed|completed|cancelled_by_client|cancelled_by_practitioner|no_show
+  priceCentsAtBooking Int? // snapshot of the service's price when booked, so
+                            // a later price change never rewrites financial
+                            // history. Null on rows created before this field
+                            // existed — reporting falls back to the current
+                            // service price for those.
   clientName       String
   clientEmail      String
   clientPhone      String?
@@ -144,6 +149,21 @@ model WebsiteContent {
   updatedAt DateTime @updatedAt
 
   @@unique([key, locale])
+}
+
+// Business expenses, entered manually by the admin — there is no bank
+// integration. Used purely for profit reporting in /admin/finances.
+model Expense {
+  id          String   @id @default(cuid())
+  date        String // "YYYY-MM-DD", the date the expense applies to
+  category    String // "rent" | "supplies" | "marketing" | "software" | "insurance" | "training" | "other"
+  description String
+  amountCents Int
+  currency    String   @default("EUR")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([date])
 }
 
 model AuditEvent {

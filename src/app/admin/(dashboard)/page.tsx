@@ -2,6 +2,9 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { formatLocalDateTime } from "@/lib/timezone";
+import { formatFeeCents } from "@/lib/services-data";
+import { getAnalyticsAppointments, totalRevenueCents } from "@/lib/analytics";
+import { resolveReportRange } from "@/lib/report-range";
 
 export default async function AdminDashboardPage() {
   await requireAdminSession();
@@ -14,7 +17,7 @@ export default async function AdminDashboardPage() {
   const weekEnd = new Date(todayStart);
   weekEnd.setDate(weekEnd.getDate() + 7);
 
-  const [todayAppointments, upcomingCount, pendingReviewsCount, unpaidCashCount] =
+  const [todayAppointments, upcomingCount, pendingReviewsCount, unpaidCashCount, monthAppointments] =
     await Promise.all([
       prisma.appointment.findMany({
         where: {
@@ -34,7 +37,9 @@ export default async function AdminDashboardPage() {
       prisma.appointment.count({
         where: { format: "in_person", status: "completed", cashPaid: false },
       }),
+      getAnalyticsAppointments(resolveReportRange("this_month")),
     ]);
+  const monthRevenueCents = totalRevenueCents(monthAppointments);
 
   return (
     <>
@@ -53,6 +58,12 @@ export default async function AdminDashboardPage() {
         <div className="admin-stat">
           <b>{pendingReviewsCount}</b>
           <span>Reviews awaiting moderation</span>
+        </div>
+        <div className="admin-stat">
+          <b>{formatFeeCents(monthRevenueCents)}</b>
+          <span>
+            Revenue this month · <Link href="/admin/finances">Finances →</Link>
+          </span>
         </div>
       </div>
 

@@ -33,10 +33,12 @@ Everything in `/admin/content` that isn't yet checked "Approved for the live sit
 ## 3. Test suite
 
 ```bash
-npm test        # 17 unit + integration tests — timezone/DST math, double-booking prevention,
-                 # buffer/notice windows, review-token single-use, cash-only enforcement
-npm run test:e2e # 10 end-to-end tests — full booking journey (keyboard/ARIA-checked), admin
-                 # auth guard, rate-limit-on-brute-force, live content edits, sign-out
+npm test        # 32 unit + integration tests — timezone/DST math, double-booking prevention,
+                 # buffer/notice windows, review-token single-use, cash-only enforcement,
+                 # revenue/expense/profit/insight calculations
+npm run test:e2e # 12 end-to-end tests — full booking journey (keyboard/ARIA-checked), admin
+                 # auth guard, rate-limit-on-brute-force, live content edits, expense entry,
+                 # sign-out
 ```
 
 Both suites were green as of this handoff. Notably verified:
@@ -71,10 +73,24 @@ What's still worth a real screen-reader pass (NVDA/VoiceOver) before launch, bey
 - No analytics, ad pixels, or third-party trackers included
 - `.env` is gitignored; only `.env.example` (placeholders only) is committed
 
-## 6. Known limitations / good next iterations
+## 6. Finances & business insights (`/admin/finances`)
+
+Beyond booking management, Michelle has a real profit/loss view:
+
+- **Revenue** counts completed sessions at the price actually charged when booked (`Appointment.priceCentsAtBooking`) — a later price change never rewrites past revenue.
+- **Expenses** are logged manually (rent, supplies, marketing, software, insurance, training, other) — there is no bank/accounting integration.
+- **Profit** = revenue minus logged expenses, for whichever period is selected (this month / last 3 months / this year / all time).
+- **Breakdowns**: revenue by service, in-person vs. online (including their relative cancellation rates), new vs. returning clients, a monthly revenue chart, and cancellation/no-show rates.
+- **Insights** are rule-based observations computed directly from her real data (e.g. a high cancellation rate, which service earns the most per session, her busiest day) — never invented, and the panel explicitly says "not enough history yet" below 5 completed sessions rather than drawing conclusions from a handful of appointments. See `src/lib/analytics.ts` for exactly what each insight checks and its threshold.
+
+This intentionally does not fabricate a rating/scoring system for the practice — every number traces to a real row in the database.
+
+## 7. Known limitations / good next iterations
 
 - `about.credentials` is edited as raw JSON in `/admin/content` — functional, but a dedicated add/remove-row UI would be friendlier for non-technical editing
 - Translations (FR/NL) are structurally supported (`WebsiteContent.locale`) but no French/Dutch copy has been written yet
 - The admin calendar is a week-agenda view, not a full drag-and-drop calendar grid
+- Finances insights are deterministic rules over the data (see `generateInsights` in `src/lib/analytics.ts`), not AI-generated commentary — predictable and free to run, but a future iteration could layer an LLM-written summary on top of the same real numbers if that's ever wanted
+- No expense receipt/attachment upload — expenses are amount + category + description only
 - No automated screen-reader test — see the accessibility section above
 - The booking advisory lock (see section 3) serializes all booking writes through one lock. This is the right trade-off for a single practitioner's volume — bookings are fast, so brief queuing under a realistic burst is imperceptible — but it does mean a genuinely pathological number of truly simultaneous unrelated bookings (tested: 10 at once, for unrelated future dates) can start timing out rather than all succeeding promptly. If booking volume ever grows enough for that to matter, narrow the lock to a per-day key instead of one global key.

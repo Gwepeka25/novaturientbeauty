@@ -62,6 +62,7 @@ export async function createAppointment(input: CreateAppointmentInput) {
             clientEmail: input.clientEmail,
             clientPhone: input.clientPhone || null,
             clientNote: input.clientNote || null,
+            priceCentsAtBooking: service.priceCents,
             manageToken,
             manageTokenExp,
           },

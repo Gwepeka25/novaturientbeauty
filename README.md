@@ -1,6 +1,6 @@
 # Michelle Ihirwe — booking website & practice management
 
-A production Next.js application for **Michelle Ihirwe, Sexologist & Intimacy Therapist**: a public marketing/booking site built to the approved **Option 3: Private Sanctuary** design, plus a private admin area for managing appointments, availability, pricing, reviews and website content without touching code.
+A production Next.js application for **Michelle Ihirwe, Sexologist & Intimacy Therapist**: a public marketing/booking site built to the approved **Option 3: Private Sanctuary** design, plus a private admin area for managing appointments, availability, pricing, reviews, website content, and business finances (revenue, expenses, profit, and data-backed insights) without touching code.
 
 Read [`docs/HANDOFF.md`](docs/HANDOFF.md) for the pre-launch checklist, accessibility/privacy status, and the content decisions Michelle still needs to approve before this goes live for real clients.
 
@@ -11,6 +11,7 @@ Read [`docs/HANDOFF.md`](docs/HANDOFF.md) for the pre-launch checklist, accessib
 - **Custom session auth** for the single admin account (JWT in an httpOnly cookie via `jose`, passwords hashed with `bcryptjs`) — no third-party auth provider needed
 - **Resend** for transactional email (booking confirmations, review invites) — optional locally; the app logs instead of sending until you add an API key
 - **Luxon** for all date/time math, so `Europe/Brussels` daylight-saving transitions are handled correctly
+- **Recharts** for the finances revenue chart
 - **Vitest** (unit/integration) + **Playwright** (end-to-end) for tests
 
 ## Getting started (local development)
@@ -95,7 +96,7 @@ src/app/                  Next.js routes
   /admin/                  Admin area — login is public, everything else requires a session
   /api/                    Booking, availability, and account API routes
 src/components/           React components (public site, booking wizard, admin widgets)
-src/lib/                  Core logic: availability/scheduling, booking, reviews, email, auth, timezone
+src/lib/                  Core logic: availability/scheduling, booking, reviews, email, auth, timezone, analytics
 tests/unit/                Pure-logic tests (timezone/DST math)
 tests/integration/         Tests against a real (disposable) database (double-booking, review tokens)
 tests/e2e/                  Playwright browser tests (booking journey, admin auth & workflows)
