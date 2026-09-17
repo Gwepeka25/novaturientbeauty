@@ -2,8 +2,8 @@ import Link from "next/link";
 
 export function BookingCTA({
   eyebrow = "Whenever you feel ready",
-  heading = "Let the first conversation be enough.",
-  body = "Choose an in-person or online appointment. You do not need to explain everything before you arrive.",
+  heading = "There is a place for you here.",
+  body = "Choose an in-person or online appointment and begin with one honest conversation.",
   ctaLabel = "View available appointments",
 }: {
   eyebrow?: string;
@@ -12,11 +12,11 @@ export function BookingCTA({
   ctaLabel?: string;
 }) {
   return (
-    <section className="final">
-      <div className="eyebrow">{eyebrow}</div>
+    <section className="wrap final">
+      <span className="eyebrow">{eyebrow}</span>
       <h2 className="serif">{heading}</h2>
       <p>{body}</p>
-      <Link className="button button-rust" href="/book">
+      <Link className="button" href="/book">
         {ctaLabel}
       </Link>
     </section>

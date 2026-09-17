@@ -11,10 +11,11 @@ export function SiteFooter() {
     <footer className="site-footer wrap">
       <span>Michelle Ihirwe · Novaturient Beauty</span>
       <nav aria-label="Footer">
+        <span>Rue Amélie Gomand 45, Jette</span>
         <Link href="/privacy">Privacy</Link>
+        <Link href="/terms">Terms</Link>
         <Link href="/contact">Contact</Link>
-        <Link href="/terms">Cancellation policy</Link>
-        <Link href="/reviews#leave-a-review">Leave a review</Link>
+        <Link href="/reviews">Reviews</Link>
       </nav>
     </footer>
   );

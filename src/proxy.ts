@@ -7,7 +7,7 @@ function getSecretKey(): Uint8Array {
   return new TextEncoder().encode(process.env.SESSION_SECRET ?? "");
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname === "/admin/login") return NextResponse.next();

@@ -4,13 +4,14 @@
 // that render them can never drift out of sync.
 
 export const CONTENT_DEFAULTS = {
-  "hero.eyebrow": "A note from Michelle",
-  "hero.heading": "There is nothing wrong with needing a safe place to talk.",
-  "hero.opening":
-    "You are allowed to be curious, uncertain, hopeful—or all three at once.",
+  "hero.eyebrow": "A private space in Jette · Also online",
+  "hero.heading": "Step out of the noise. Speak freely.",
   "hero.body":
-    "My role is not to tell you who to be. It is to listen deeply, help you understand what is happening beneath the surface and support you as you move toward greater confidence, connection and ease.",
-  "hero.cta": "Begin with a confidential session",
+    "A calm, confidential setting for conversations about intimacy, desire, relationships and connection—with no pressure to arrive with the right words.",
+  "hero.cta": "Find your session",
+  "hero.secondary_cta": "What to expect",
+  "hero.profile_tagline":
+    "Professional guidance with warmth, deep listening and respect for your pace.",
 
   "about.bio":
     "Michelle Ihirwe is a sexologist and intimacy therapist working with individuals and couples on desire, connection, communication and confidence. Her approach is gentle, direct and non-judgmental: you set the pace, she brings her training, full attention and a space held with intention.",

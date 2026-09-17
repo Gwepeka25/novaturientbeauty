@@ -11,9 +11,10 @@ const prisma = new PrismaClient();
 const PRE_APPROVED_KEYS = new Set([
   "hero.eyebrow",
   "hero.heading",
-  "hero.opening",
   "hero.body",
   "hero.cta",
+  "hero.secondary_cta",
+  "hero.profile_tagline",
   "sessions.cash_note",
   "contact.address",
 ]);
@@ -85,7 +86,7 @@ async function main() {
     await prisma.review.create({
       data: {
         body:
-          "I felt seen and understood—a space both safe and challenging, with little being lost in translation.",
+          "Therapy is uncomfortable, truly, so I am grateful to have found with Michelle a space both safe and challenging.",
         displayNameMode: "anonymous",
         displayName: "Client reflection · Shared with permission",
         consentPublic: true,

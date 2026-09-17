@@ -48,3 +48,40 @@ export function IconBanknote({ className }: IconProps) {
     </svg>
   );
 }
+
+export function IconUserRound({ className }: IconProps) {
+  return (
+    <svg {...base} width={24} height={24} className={className}>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M5 21c0-3.9 3.1-7 7-7s7 3.1 7 7" />
+    </svg>
+  );
+}
+
+export function IconUsersRound({ className }: IconProps) {
+  return (
+    <svg {...base} width={24} height={24} className={className}>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3.5 20c0-3 2.5-5.5 5.5-5.5s5.5 2.5 5.5 5.5" />
+      <circle cx="17" cy="9" r="2.4" />
+      <path d="M15.5 14.2c2.4.3 4.5 2.3 4.8 5" />
+    </svg>
+  );
+}
+
+export function IconGraduationCap({ className }: IconProps) {
+  return (
+    <svg {...base} width={24} height={24} className={className}>
+      <path d="M2 8 12 3l10 5-10 5-10-5Z" />
+      <path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5" />
+    </svg>
+  );
+}
+
+export function IconArrowDown({ className }: IconProps) {
+  return (
+    <svg {...base} width={16} height={16} className={className}>
+      <path d="M12 4v16M6 14l6 6 6-6" />
+    </svg>
+  );
+}

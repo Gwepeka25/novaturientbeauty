@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans, Italiana } from "next/font/google";
+import { DM_Sans, Instrument_Serif } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
@@ -10,10 +10,11 @@ const dmSans = DM_Sans({
   weight: ["400", "500"],
 });
 
-const italiana = Italiana({
-  variable: "--font-italiana",
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-serif",
   subsets: ["latin"],
   weight: ["400"],
+  style: ["normal", "italic"],
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -40,7 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${dmSans.variable} ${italiana.variable}`}
+      className={`${dmSans.variable} ${instrumentSerif.variable}`}
       suppressHydrationWarning
     >
       <body>

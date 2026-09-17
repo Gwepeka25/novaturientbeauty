@@ -386,7 +386,7 @@ export function BookingWizard({
             <button type="button" className="button button-outline" onClick={() => setStep("details")}>
               Back
             </button>
-            <button type="button" className="button button-rust" onClick={handleSubmit} disabled={submitting}>
+            <button type="button" className="button" onClick={handleSubmit} disabled={submitting}>
               {submitting ? "Confirming…" : "Confirm booking"}
             </button>
           </div>
