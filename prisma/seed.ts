@@ -79,24 +79,55 @@ async function main() {
     console.log("Created placeholder Mon-Fri 09:00-17:00 availability rules.");
   }
 
-  const existingLegacyReview = await prisma.review.findFirst({
-    where: { isLegacy: true },
+  // Real testimonials from novaturientbeauty.com, each in the language the
+  // client actually wrote it in — kept as-is rather than translated, and
+  // shown regardless of the site's current language (the real site does
+  // the same: all three together, not filtered by viewer language).
+  const LEGACY_TESTIMONIALS = [
+    {
+      displayName: "Marie",
+      body: "As a therapist, Michelle is an active listener that is committed to authentic healing. Through our work together, I learned and practiced healing as a path that I didn't have to walk alone. A journey where accountability meant to be sincere and vulnerable with oneself and others. As an afrodescent woman in her 30s who grew up in Western Europe, I explored therapy with caution, distrust and lots of questions. Luckily, I found great comfort and ease not having to explain the basics of our « familial » structures in a therapy session, for example. I felt seen and understood without the frustration of failing to translate the many facets of the afrodiasporic experience, I don't always have the words for in English or French. Therapy is uncomfortable, truly, so I am grateful to have found, with Michelle, a space both safe and challenging.",
+      publishOrder: 0,
+    },
+    {
+      displayName: "Gwenn",
+      body: "Un immense merci à Michelle pour son accompagnement, qui a été une véritable transformation pour moi.\n\nGrâce à son écoute profonde et sa clairvoyance, elle a su mettre en lumière des schémas de vie que je ne percevais pas. Avec bienveillance, elle m'a guidée vers une meilleure compréhension de moi-même, de mon corps et de mes émotions, qui m'étaient jusque-là inconnus.\n\nSon accompagnement a été une révélation, et je recommande sans hésitation à toute personne en quête d'évolution de se faire accompagner par elle.",
+      publishOrder: 1,
+    },
+    {
+      displayName: "Isabelle",
+      body: "“If you are depressed you are living in the past. If you are anxious you are living in the future. If you are at peace you are living in the present.” – Lao Tzu : Michelle leert mij meer genieten van het leven. Zij is de breeddenkend persoon die ik ken, geen menselijk onderwerp is haar vreemd. Ik kan leren wat veiligheid betekent in een relatie",
+      publishOrder: 2,
+    },
+  ];
+
+  // Drop the earlier placeholder (a decontextualized, unattributed excerpt
+  // from Marie's real quote) now that the real, attributed testimonials are
+  // seeded below.
+  await prisma.review.deleteMany({
+    where: { isLegacy: true, displayName: "Client reflection · Shared with permission" },
   });
-  if (!existingLegacyReview) {
-    await prisma.review.create({
-      data: {
-        body:
-          "Therapy is uncomfortable, truly, so I am grateful to have found with Michelle a space both safe and challenging.",
-        displayNameMode: "anonymous",
-        displayName: "Client reflection · Shared with permission",
-        consentPublic: true,
-        status: "approved",
-        isLegacy: true,
-        publishOrder: 0,
-      },
+
+  for (const testimonial of LEGACY_TESTIMONIALS) {
+    const existing = await prisma.review.findFirst({
+      where: { isLegacy: true, displayName: testimonial.displayName },
     });
-    console.log("Seeded legacy testimonial.");
+    const data = {
+      body: testimonial.body,
+      displayNameMode: "first_name" as const,
+      displayName: testimonial.displayName,
+      consentPublic: true,
+      status: "approved",
+      isLegacy: true,
+      publishOrder: testimonial.publishOrder,
+    };
+    if (existing) {
+      await prisma.review.update({ where: { id: existing.id }, data });
+    } else {
+      await prisma.review.create({ data });
+    }
   }
+  console.log(`Seeded ${LEGACY_TESTIMONIALS.length} real legacy testimonials.`);
 
   for (const [key, value] of Object.entries(CONTENT_DEFAULTS)) {
     await prisma.websiteContent.upsert({
