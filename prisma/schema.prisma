@@ -64,6 +64,7 @@ model AvailabilityException {
   endMinute   Int?
   isFullDayBlock Boolean @default(false)
   kind      String // "block" | "extra_availability" | "holiday"
+  formatRestriction String? // null = applies to both formats; "in_person" | "online" = only that format is affected, so the other stays bookable
   note      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

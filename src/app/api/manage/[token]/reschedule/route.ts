@@ -39,7 +39,12 @@ export async function POST(
   }
 
   const newStart = new Date(parsed.data.startUtc);
-  const available = await isSlotStillAvailable(appointment.serviceId, newStart, appointment.id);
+  const available = await isSlotStillAvailable(
+    appointment.serviceId,
+    newStart,
+    appointment.format as "in_person" | "online",
+    appointment.id,
+  );
   if (!available) {
     return NextResponse.json(
       { error: "That time is no longer available. Please choose another." },

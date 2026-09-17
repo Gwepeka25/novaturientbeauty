@@ -21,7 +21,12 @@ export async function GET(
     return NextResponse.json({ error: "This link is invalid or has expired." }, { status: 404 });
   }
 
-  const slots = await getAvailableSlots(date, appointment.serviceId, appointment.id);
+  const slots = await getAvailableSlots(
+    date,
+    appointment.serviceId,
+    appointment.format as "in_person" | "online",
+    appointment.id,
+  );
   return NextResponse.json({
     slots: slots.map((s) => ({ startUtc: s.startUtc.toISOString(), label: formatLocalTime(s.startUtc) })),
   });

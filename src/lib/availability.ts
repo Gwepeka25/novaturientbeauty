@@ -4,12 +4,15 @@ import {
   localWeekday,
   todayLocalISO,
   addDaysLocalISO,
+  utcToLocalDateISO,
+  utcToLocalMinuteOfDay,
   nowUtc,
   minutesBetween,
 } from "@/lib/timezone";
 
 const SLOT_GRANULARITY_MINUTES = 15;
 
+export type BookingFormat = "in_person" | "online";
 export type Slot = { startUtc: Date; endUtc: Date };
 
 type Interval = { start: number; end: number };
@@ -55,18 +58,28 @@ async function getSchedulingSettings() {
   );
 }
 
-export async function getOpenIntervalsForDate(dateISO: string): Promise<Interval[]> {
+export async function getOpenIntervalsForDate(
+  dateISO: string,
+  format: BookingFormat,
+): Promise<Interval[]> {
   const weekday = localWeekday(dateISO);
   const [rules, exceptions] = await Promise.all([
     prisma.availabilityRule.findMany({ where: { weekday, active: true } }),
     prisma.availabilityException.findMany({ where: { date: dateISO } }),
   ]);
 
-  if (exceptions.some((e) => e.isFullDayBlock)) return [];
+  // An exception with no formatRestriction affects both formats; one with a
+  // formatRestriction (e.g. "online only that day") only affects bookings in
+  // that format, leaving the other format's hours untouched.
+  const applicable = exceptions.filter(
+    (e) => !e.formatRestriction || e.formatRestriction === format,
+  );
+
+  if (applicable.some((e) => e.isFullDayBlock)) return [];
 
   let intervals: Interval[] = mergeIntervals(rules.map((r) => ({ start: r.startMinute, end: r.endMinute })));
 
-  for (const exception of exceptions) {
+  for (const exception of applicable) {
     if (exception.startMinute == null || exception.endMinute == null) continue;
     if (exception.kind === "extra_availability") {
       intervals = mergeIntervals([...intervals, { start: exception.startMinute, end: exception.endMinute }]);
@@ -84,6 +97,7 @@ export async function getOpenIntervalsForDate(dateISO: string): Promise<Interval
 export async function getAvailableSlots(
   dateISO: string,
   serviceId: string,
+  format: BookingFormat,
   excludeAppointmentId?: string,
 ): Promise<Slot[]> {
   const [service, settings] = await Promise.all([
@@ -91,12 +105,13 @@ export async function getAvailableSlots(
     getSchedulingSettings(),
   ]);
   if (!service || !service.active) return [];
+  if (service.format !== "both" && service.format !== format) return [];
 
   const today = todayLocalISO();
   const maxDate = addDaysLocalISO(today, settings.maxAdvanceDays);
   if (dateISO < today || dateISO > maxDate) return [];
 
-  const intervals = await getOpenIntervalsForDate(dateISO);
+  const intervals = await getOpenIntervalsForDate(dateISO, format);
   if (intervals.length === 0) return [];
 
   const dayStart = localToUtc(dateISO, 0);
@@ -145,15 +160,28 @@ export async function getAvailableSlots(
 export async function isSlotStillAvailable(
   serviceId: string,
   startUtc: Date,
+  format: BookingFormat,
   excludeAppointmentId?: string,
 ): Promise<boolean> {
   const service = await prisma.service.findUnique({ where: { id: serviceId } });
   if (!service) return false;
+  if (service.format !== "both" && service.format !== format) return false;
   const endUtc = new Date(startUtc.getTime() + service.durationMin * 60_000);
   const settings = await getSchedulingSettings();
 
   const now = nowUtc();
   if (minutesBetween(now, startUtc) < settings.minNoticeMinutes) return false;
+
+  // Re-check against the weekly hours and any one-off blocks/format
+  // restrictions, not just against other appointments — otherwise a request
+  // could bypass an admin block (e.g. "online only today") by hitting the
+  // API directly with a time that was never actually offered.
+  const dateISO = utcToLocalDateISO(startUtc);
+  const startMinute = utcToLocalMinuteOfDay(startUtc);
+  const endMinute = startMinute + service.durationMin;
+  const openIntervals = await getOpenIntervalsForDate(dateISO, format);
+  const fitsOpenHours = openIntervals.some((iv) => startMinute >= iv.start && endMinute <= iv.end);
+  if (!fitsOpenHours) return false;
 
   const conflict = await prisma.appointment.findFirst({
     where: {

@@ -128,6 +128,14 @@ export default async function AdminAvailabilityPage() {
             <label>End</label>
             <input type="time" name="endTime" />
           </div>
+          <div className="admin-field">
+            <label>Applies to</label>
+            <select name="formatRestriction" defaultValue="">
+              <option value="">Both formats</option>
+              <option value="in_person">In person only (online stays open)</option>
+              <option value="online">Online only (in-person stays open)</option>
+            </select>
+          </div>
           <div className="admin-field" style={{ flex: 1 }}>
             <label>Note</label>
             <input type="text" name="note" placeholder="e.g. Dentist appointment" />
@@ -136,6 +144,12 @@ export default async function AdminAvailabilityPage() {
             Add
           </button>
         </form>
+        <p className="admin-field-hint">
+          Use &ldquo;Applies to&rdquo; to keep one format open while blocking the other — e.g. pick
+          &ldquo;In person only&rdquo; and full day for a date where you can still take online
+          sessions. Clients who want in-person on that date will see it&rsquo;s unavailable and be
+          offered online instead, rather than seeing nothing at all.
+        </p>
 
         {exceptions.length === 0 ? (
           <p className="admin-empty">No exceptions scheduled.</p>
@@ -146,6 +160,7 @@ export default async function AdminAvailabilityPage() {
                 <th>Date</th>
                 <th>Type</th>
                 <th>When</th>
+                <th>Applies to</th>
                 <th>Note</th>
                 <th></th>
               </tr>
@@ -161,6 +176,13 @@ export default async function AdminAvailabilityPage() {
                       : exception.startMinute != null && exception.endMinute != null
                         ? `${minutesToTime(exception.startMinute)}–${minutesToTime(exception.endMinute)}`
                         : "—"}
+                  </td>
+                  <td>
+                    {exception.formatRestriction === "in_person"
+                      ? "In person only"
+                      : exception.formatRestriction === "online"
+                        ? "Online only"
+                        : "Both formats"}
                   </td>
                   <td>{exception.note ?? "—"}</td>
                   <td>

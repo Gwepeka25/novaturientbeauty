@@ -99,7 +99,7 @@ describe("createAppointment — double booking prevention", () => {
 
     // 11:00 start would begin exactly when the first appointment ends (10:00-11:00),
     // but a 15-minute buffer-after means it should not be offered.
-    const slots = await getAvailableSlots(TEST_DATE, serviceId);
+    const slots = await getAvailableSlots(TEST_DATE, serviceId, "in_person");
     const conflicting = slots.find((s) => s.startUtc.getTime() === localToUtc(TEST_DATE, 11 * 60).getTime());
     expect(conflicting).toBeUndefined();
 
@@ -117,12 +117,12 @@ describe("createAppointment — double booking prevention", () => {
       clientEmail: "cancelme@example.com",
     });
 
-    let slots = await getAvailableSlots(TEST_DATE, serviceId);
+    let slots = await getAvailableSlots(TEST_DATE, serviceId, "in_person");
     expect(slots.find((s) => s.startUtc.getTime() === startUtc.getTime())).toBeUndefined();
 
     await prisma.appointment.update({ where: { id: appt.id }, data: { status: "cancelled_by_client" } });
 
-    slots = await getAvailableSlots(TEST_DATE, serviceId);
+    slots = await getAvailableSlots(TEST_DATE, serviceId, "in_person");
     expect(slots.find((s) => s.startUtc.getTime() === startUtc.getTime())).toBeDefined();
   });
 });
@@ -132,13 +132,13 @@ describe("getAvailableSlots — policy boundaries", () => {
     await prisma.availabilityException.create({
       data: { date: TEST_DATE, kind: "block", isFullDayBlock: true },
     });
-    const slots = await getAvailableSlots(TEST_DATE, serviceId);
+    const slots = await getAvailableSlots(TEST_DATE, serviceId, "in_person");
     expect(slots).toHaveLength(0);
   });
 
   it("returns no slots beyond the booking horizon", async () => {
     const tooFar = addDaysLocalISO(todayLocalISO(), 200);
-    const slots = await getAvailableSlots(tooFar, serviceId);
+    const slots = await getAvailableSlots(tooFar, serviceId, "in_person");
     expect(slots).toHaveLength(0);
   });
 });

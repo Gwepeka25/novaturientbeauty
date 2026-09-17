@@ -8,12 +8,13 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const date = searchParams.get("date") ?? "";
   const serviceId = searchParams.get("serviceId") ?? "";
+  const format = searchParams.get("format") ?? "";
 
-  if (!DATE_RE.test(date) || !serviceId) {
+  if (!DATE_RE.test(date) || !serviceId || (format !== "in_person" && format !== "online")) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const slots = await getAvailableSlots(date, serviceId);
+  const slots = await getAvailableSlots(date, serviceId, format);
 
   return NextResponse.json({
     slots: slots.map((s) => ({

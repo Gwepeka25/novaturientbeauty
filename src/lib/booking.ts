@@ -47,7 +47,7 @@ export async function createAppointment(input: CreateAppointmentInput) {
         });
         if (conflict) throw new SlotUnavailableError();
 
-        const stillAvailable = await isSlotStillAvailable(input.serviceId, input.startUtc);
+        const stillAvailable = await isSlotStillAvailable(input.serviceId, input.startUtc, input.format);
         if (!stillAvailable) throw new SlotUnavailableError();
 
         const appointment = await tx.appointment.create({

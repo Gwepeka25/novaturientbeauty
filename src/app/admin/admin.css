@@ -78,6 +78,14 @@
   font-size: 14px;
 }
 
+.admin-field-hint {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+  margin-top: -8px;
+  margin-bottom: 20px;
+}
+
 .admin-card {
   background: var(--paper);
   border: 1px solid var(--line);

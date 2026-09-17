@@ -17,6 +17,12 @@ export function utcToLocalDateISO(date: Date): string {
   return DateTime.fromJSDate(date, { zone: "utc" }).setZone(TIMEZONE).toISODate()!;
 }
 
+/** Minutes since local midnight (Europe/Brussels) that a UTC instant falls at. */
+export function utcToLocalMinuteOfDay(date: Date): number {
+  const dt = DateTime.fromJSDate(date, { zone: "utc" }).setZone(TIMEZONE);
+  return dt.hour * 60 + dt.minute;
+}
+
 export function localWeekday(dateISO: string): number {
   // Luxon weekday is 1=Monday..7=Sunday; our schema uses 0=Sunday..6=Saturday.
   const [year, month, day] = dateISO.split("-").map(Number);

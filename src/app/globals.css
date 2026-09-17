@@ -1075,6 +1075,28 @@ legend {
   margin-bottom: 24px;
 }
 
+.no-slots-message {
+  grid-column: 1 / -1;
+}
+
+.no-slots-message p {
+  margin-bottom: 8px;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--teal);
+  text-decoration: underline;
+  font: inherit;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  color: var(--gold);
+}
+
 .time-slot {
   min-height: 44px;
   border: 1px solid var(--line);

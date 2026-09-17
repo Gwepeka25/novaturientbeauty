@@ -44,6 +44,7 @@ export function BookingWizard({
   const [slots, setSlots] = useState<Slot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+  const [altFormatAvailable, setAltFormatAvailable] = useState(false);
 
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
@@ -65,18 +66,37 @@ export function BookingWizard({
 
   const dateOptions = useMemo(() => buildDateOptions(minDate, maxDate), [minDate, maxDate]);
 
-  async function loadSlots(date: string) {
+  async function loadSlots(date: string, fmt: "in_person" | "online") {
     if (!service) return;
     setSlotsLoading(true);
     setSlots([]);
     setSelectedSlot(null);
+    setAltFormatAvailable(false);
     try {
-      const res = await fetch(`/api/availability?date=${date}&serviceId=${service.id}`);
+      const res = await fetch(`/api/availability?date=${date}&serviceId=${service.id}&format=${fmt}`);
       const json = await res.json();
-      setSlots(json.slots ?? []);
+      const fetchedSlots: Slot[] = json.slots ?? [];
+      setSlots(fetchedSlots);
+
+      // If this format is unavailable that day but the service also
+      // supports the other format, check whether that one is open — so we
+      // can offer it instead of just saying "unavailable."
+      if (fetchedSlots.length === 0 && service.format === "both") {
+        const altFmt = fmt === "in_person" ? "online" : "in_person";
+        const altRes = await fetch(`/api/availability?date=${date}&serviceId=${service.id}&format=${altFmt}`);
+        const altJson = await altRes.json();
+        setAltFormatAvailable((altJson.slots ?? []).length > 0);
+      }
     } finally {
       setSlotsLoading(false);
     }
+  }
+
+  function switchFormat() {
+    if (!format || !dateISO) return;
+    const nextFormat = format === "in_person" ? "online" : "in_person";
+    setFormat(nextFormat);
+    void loadSlots(dateISO, nextFormat);
   }
 
   async function handleSubmit() {
@@ -215,7 +235,7 @@ export function BookingWizard({
         </fieldset>
       )}
 
-      {step === "datetime" && service && (
+      {step === "datetime" && service && format && (
         <fieldset>
           <legend className="step-heading-legend">
             <h2 className="serif step-heading">Choose a date and time</h2>
@@ -230,7 +250,7 @@ export function BookingWizard({
                 className={`date-chip ${dateISO === d.iso ? "is-selected" : ""}`}
                 onClick={() => {
                   setDateISO(d.iso);
-                  void loadSlots(d.iso);
+                  void loadSlots(d.iso, format);
                 }}
               >
                 <span>{d.weekday}</span>
@@ -244,7 +264,21 @@ export function BookingWizard({
             <div className="time-slot-grid" aria-live="polite">
               {slotsLoading && <p>Loading available times…</p>}
               {!slotsLoading && slots.length === 0 && (
-                <p>No times available that day. Please choose another date.</p>
+                <div className="no-slots-message">
+                  <p>
+                    No {format === "in_person" ? "in-person" : "online"} times available that
+                    day. Please choose another date.
+                  </p>
+                  {altFormatAvailable && (
+                    <p>
+                      {format === "in_person" ? "Online" : "In-person"} sessions are still open
+                      that day.{" "}
+                      <button type="button" className="link-button" onClick={switchFormat}>
+                        Switch to {format === "in_person" ? "online" : "in person"}
+                      </button>
+                    </p>
+                  )}
+                </div>
               )}
               {!slotsLoading &&
                 slots.map((slot) => (
