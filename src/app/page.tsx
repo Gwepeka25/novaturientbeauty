@@ -71,6 +71,8 @@ export default async function HomePage() {
             <Link href="/sessions">{t(locale, "nav_sessions")}</Link>
             <Link href="/reviews">{t(locale, "nav_reviews")}</Link>
             <Link href="/contact">{t(locale, "nav_contact")}</Link>
+            <a href="#ps-process">{t(locale, "nav_what_to_expect")}</a>
+            <a href="#ps-fees">{t(locale, "nav_fees")}</a>
           </nav>
           <div className="header-right">
             <LocaleSwitcher locale={locale} />
