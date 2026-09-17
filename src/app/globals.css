@@ -849,6 +849,20 @@ h2.serif,
   line-height: 1.6;
 }
 
+.contact-map {
+  margin-top: 30px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.contact-map iframe {
+  width: 100%;
+  height: 280px;
+  border: 0;
+  display: block;
+}
+
 .reviews-list {
   list-style: none;
   display: grid;
@@ -885,6 +899,18 @@ h2.serif,
 
 .legal-body p + p {
   margin-top: 16px;
+}
+
+.legal-body h2 {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 400;
+  margin-top: 32px;
+  margin-bottom: 8px;
+}
+
+.legal-body h2:first-child {
+  margin-top: 0;
 }
 
 .draft-banner {

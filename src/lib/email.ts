@@ -88,6 +88,20 @@ function buildIcs(appointment: AppointmentForEmail): string | null {
   return value;
 }
 
+export async function sendAppointmentReminderEmail(appointment: AppointmentForEmail) {
+  const manageUrl = `${siteUrl}/manage/${appointment.manageToken}`;
+  const html = `
+    <p>Hi ${escapeHtml(appointment.clientName)},</p>
+    <p>A reminder that your appointment is tomorrow, ${escapeHtml(formatLocalDateTime(appointment.startsAt))} (Brussels time).</p>
+    <p>Reference: ${escapeHtml(appointment.publicCode)}</p>
+    <p>Need to reschedule or cancel? <a href="${manageUrl}">${manageUrl}</a></p>
+    <p>See you soon.</p>
+    <p>— ${escapeHtml(BRAND_NAME)}</p>
+  `;
+  // Neutral subject line — no service/appointment type revealed.
+  await sendEmail(appointment.clientEmail, "Reminder: your appointment tomorrow", html);
+}
+
 export async function sendReviewInviteEmail(
   clientEmail: string,
   clientName: string,

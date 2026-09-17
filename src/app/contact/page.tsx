@@ -49,6 +49,14 @@ export default async function ContactPage() {
               )}
             </ul>
             <div className="contact-note">{content["contact.note"]}</div>
+            <div className="contact-map">
+              <iframe
+                title="Map showing the practice location"
+                src={`https://www.google.com/maps?q=${encodeURIComponent(content["contact.address"])}&output=embed`}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
           </div>
           <div className="format-card">
             <span className="eyebrow">Discretion, by default</span>

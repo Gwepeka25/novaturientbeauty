@@ -103,6 +103,7 @@ model Appointment {
   onlineMeetingUrl String? // only set/sent after confirmation
   manageToken      String   @unique // secure token for reschedule/cancel links
   manageTokenExp   DateTime
+  reminderSentAt   DateTime? // set once the day-before reminder email has gone out
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
