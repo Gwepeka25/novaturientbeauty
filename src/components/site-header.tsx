@@ -16,6 +16,7 @@ export function SiteHeader({ locale }: { locale: Locale }) {
   if (pathname === "/" || pathname?.startsWith("/admin")) return null;
 
   const NAV_LINKS = [
+    { href: "/", label: t(locale, "nav_home") },
     { href: "/about", label: t(locale, "nav_about") },
     { href: "/sessions", label: t(locale, "nav_sessions") },
     { href: "/reviews", label: t(locale, "nav_reviews") },

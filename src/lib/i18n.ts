@@ -15,6 +15,7 @@ export const LOCALE_INTL_TAG: Record<Locale, string> = { en: "en-GB", fr: "fr-BE
 export const LOCALE_COOKIE = "nb_locale";
 
 const en = {
+  nav_home: "Home",
   nav_about: "About",
   nav_sessions: "Sessions",
   nav_reviews: "Reviews",
@@ -163,6 +164,7 @@ const en = {
 export type I18nKey = keyof typeof en;
 
 const fr: Record<I18nKey, string> = {
+  nav_home: "Accueil",
   nav_about: "À propos",
   nav_sessions: "Séances",
   nav_reviews: "Avis",
@@ -309,6 +311,7 @@ const fr: Record<I18nKey, string> = {
 };
 
 const nl: Record<I18nKey, string> = {
+  nav_home: "Home",
   nav_about: "Over mij",
   nav_sessions: "Sessies",
   nav_reviews: "Reviews",
