@@ -2,7 +2,7 @@
 
 You are a senior product designer and full-stack engineer. Build a production-ready website and lightweight practice-management system for **Michelle Ihirwe, Sexologist & Intimacy Therapist**.
 
-The client has approved the visual direction in `/index.html`. Treat it as the visual source of truth. The final product should feel at least as considered and refined—not like a generic healthcare template and not like the same layout with different colours.
+The client has approved **Option 3: Private Sanctuary**, supplied in `/index.html`. Treat that file as the visual source of truth. The final product should feel at least as considered and refined—not like a generic healthcare template and not like a reinterpretation based only on its colours.
 
 ## 1. Product goal
 
@@ -23,14 +23,18 @@ Keep public pages focused. Do not overload them with text.
 Preserve the identity and layout logic of `/index.html`:
 
 - Michelle’s name is the primary brand; **Novaturient Beauty** is a quiet secondary signature.
-- Use an intimate editorial composition: centred identity, split portrait/personal-letter hero, generous whitespace, numbered recognition statements, a full-width real-office photograph with an inset text panel, restrained typographic pricing, one strong testimonial, and a dark final call to action.
+- The first screen must reproduce the approved immersive hero: Michelle’s real office photograph fills the full panel; a translucent deep-forest overlay moves diagonally across the left and centre while the brighter room remains visible on the right.
+- Place the fine-lined header over the hero: Michelle’s wordmark at top left, three short navigation links centred, and `EN · FR · NL` plus a gold-outline/glass **Book** action at top right.
+- The left hero column contains the warm-gold eyebrow `A private space in Jette · Also online`, the very large serif headline `Step out of the noise. Speak freely.`, concise supporting copy, and two rounded actions.
+- Anchor Michelle’s light profile card toward the lower-right of the hero. It uses her circular portrait, name, title, and the sentence `Professional guidance with warmth, deep listening and respect for your pace.`
+- Below the hero, preserve the approved rhythm: cream breathing space, three rounded session cards, a dark-green “what to expect” band, a two-column fee section, a centred testimonial, and a simple final booking invitation.
 - The experience should feel human, private, warm, assured, and premium.
-- Use the supplied portrait and office image from `/assets/`. Do not replace them with stock imagery or AI-generated people.
-- Use a sophisticated serif/display face in the spirit of **Italiana** with a clean sans face in the spirit of **DM Sans**. Self-host fonts where licensing permits, or use privacy-conscious loading.
-- Palette: warm cream, clay, muted rust, soft charcoal, and tones already present in the photography.
+- Use the supplied portrait and office image from `/assets/`. Do not replace them with stock imagery or AI-generated people. In production, reference optimised asset files rather than leaving large base64 images embedded in the page.
+- Use a fluid editorial serif in the spirit of **Instrument Serif** with **DM Sans** for interface and body copy. Self-host fonts where licensing permits, or use privacy-conscious loading.
+- Palette: deep forest green, soft ivory, muted teal, warm gold, and natural colours from the office photograph.
 - Use restrained motion: subtle fades/reveals only, and respect `prefers-reduced-motion`.
-- Avoid glossy wellness clichés, generic medical blue, excessive rounded cards, pill-shaped controls everywhere, icon clutter, and decorative gradients.
-- CTAs should be square or only minimally rounded, with clear focus and hover states.
+- Avoid glossy wellness clichés, generic medical blue, dense icon clutter, decorative gradients, or an unrelated clinical-card template.
+- Retain the approved rounded actions and cards, with clear keyboard focus, hover, active, and disabled states.
 
 Match the reference closely on desktop while translating it intelligently to mobile. Do not merely imitate its colours; preserve its proportions, hierarchy, pacing, overlaps, alignment, and editorial tension.
 
@@ -38,26 +42,23 @@ Match the reference closely on desktop while translating it intelligently to mob
 
 The voice is gentle, direct, inclusive, sex-positive, non-judgmental, and never sensational.
 
-Use this approved hero copy as the starting point:
+Use this approved hero copy:
 
-> A note from Michelle
+> A private space in Jette · Also online
 >
-> There is nothing wrong with needing a safe place to talk.
+> Step out of the noise. Speak freely.
 >
-> You are allowed to be curious, uncertain, hopeful—or all three at once.
->
-> My role is not to tell you who to be. It is to listen deeply, help you understand what is happening beneath the surface and support you as you move toward greater confidence, connection and ease.
->
-> Michelle
+> A calm, confidential setting for conversations about intimacy, desire, relationships and connection—with no pressure to arrive with the right words.
 
-Primary CTA: **Begin with a confidential session**
+Primary CTA: **Find your session**
 
-Support the visitor with concise recognition statements such as:
+Secondary CTA: **What to expect**
 
-1. Intimacy feels distant, painful, or difficult to talk about.
-2. Desire, pleasure, or confidence has changed.
-3. You and your partner keep missing each other in communication.
-4. You want a deeper understanding of your body, emotions, and patterns.
+The first booking choices should be framed around the person rather than a diagnosis:
+
+1. **I’m coming on my own**
+2. **We’re coming together**
+3. **I’m a student**
 
 Do not diagnose visitors or promise outcomes. Do not imply emergency or crisis support. Include a discreet statement that the service is not an emergency service and direct urgent situations to appropriate local emergency resources once the launch country and legal copy are confirmed.
 
