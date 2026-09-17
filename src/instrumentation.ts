@@ -6,7 +6,6 @@
 const POLL_INTERVAL_MS = 15 * 60 * 1000;
 
 declare global {
-  // eslint-disable-next-line no-var
   var __reminderSchedulerStarted: boolean | undefined;
 }
 

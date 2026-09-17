@@ -58,7 +58,7 @@ export default function TermsPage() {
         <h2>Liability</h2>
         <p>
           [Placeholder — standard liability/disclaimer language (e.g. this
-          site's content is for general information only and is not a
+          site&rsquo;s content is for general information only and is not a
           substitute for individual professional advice; no liability for
           third-party links) to be drafted with a lawyer.]
         </p>

@@ -1,16 +1,9 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { getSessionSecretKey } from "@/lib/session-secret";
 
 const SESSION_COOKIE = "nb_admin_session";
 const SESSION_TTL_SECONDS = 8 * 60 * 60; // 8 hours
-
-function getSecretKey(): Uint8Array {
-  const secret = process.env.SESSION_SECRET;
-  if (!secret || secret.length < 16) {
-    throw new Error("SESSION_SECRET must be set to a long random string in .env");
-  }
-  return new TextEncoder().encode(secret);
-}
 
 export type SessionPayload = { sub: string; email: string; name: string };
 
@@ -19,7 +12,7 @@ export async function createSessionCookie(payload: SessionPayload) {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(`${SESSION_TTL_SECONDS}s`)
-    .sign(getSecretKey());
+    .sign(getSessionSecretKey());
 
   const store = await cookies();
   store.set(SESSION_COOKIE, token, {
@@ -41,7 +34,7 @@ export async function getSession(): Promise<SessionPayload | null> {
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return null;
   try {
-    const { payload } = await jwtVerify(token, getSecretKey());
+    const { payload } = await jwtVerify(token, getSessionSecretKey());
     return payload as unknown as SessionPayload;
   } catch {
     return null;

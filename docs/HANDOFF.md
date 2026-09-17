@@ -14,8 +14,8 @@ Nothing below is fabricated — each is either a reasonable placeholder clearly 
 | Areas of focus / specialties | `/admin/content` → About (`about.specialties`) | Pulled from her real Doctoranytime profile (Addictions, Female/Male Sexual Disorder, Vaginismus, Desire disorder, Difficulty communicating with partner, Sexuality problems, Pregnancy follow-up, Harassment) — confirm this list is current before approving |
 | Legacy testimonial | `/admin/reviews` | Still the one placeholder quote from the design brief. Her real site has 3 real testimonials (Marie, Gwenn, Isabelle) — swap these in once you have the exact text; don't invent quotes |
 | Contact email & phone | `/admin/content` → Contact | Placeholder (`hello@example.com`, blank phone) — must be replaced (likely `michelle@novaturientbeauty.com`, to be confirmed) |
-| Privacy Policy | `/privacy` | **Draft, explicitly labeled "needs legal review"** — do not launch without a lawyer reviewing GDPR lawful basis, retention periods, and data-subject rights |
-| Terms & Cancellation Policy | `/terms` | **Draft, explicitly labeled "needs legal review"** — cancellation window (currently 24h), no-show policy, and the "not an emergency service" wording all need Michelle + legal sign-off |
+| Privacy Policy | `/privacy` | **Draft, explicitly labeled "needs legal review"** — now structured (data controller, legal basis, processors, GDPR rights) so a lawyer's review is faster, but every bracketed `[placeholder]` (retention period, in particular) is still a real decision, not something to launch with as-is |
+| Terms & Cancellation Policy | `/terms` | **Draft, explicitly labeled "needs legal review"** — same as above; cancellation window (currently 24h), no-show fee, liability wording, and governing law are all left as explicit `[placeholder]`s for Michelle + a lawyer |
 | Weekly availability (Mon–Fri 09:00–17:00) | `/admin/availability` | Operational placeholder — replace with Michelle's real hours |
 | Legacy testimonial text | `/admin/reviews` | The one quote supplied in the design brief; label it as she prefers, or remove it once real verified reviews exist |
 | Cash-payment note | `/admin/content` → Sessions | Matches the brief's approved wording; already marked approved |
@@ -36,9 +36,10 @@ Everything in `/admin/content` that isn't yet checked "Approved for the live sit
 ## 3. Test suite
 
 ```bash
-npm test        # 32 unit + integration tests — timezone/DST math, double-booking prevention,
+npm test        # 42 unit + integration tests — timezone/DST math, double-booking prevention,
                  # buffer/notice windows, review-token single-use, cash-only enforcement,
-                 # revenue/expense/profit/insight calculations
+                 # revenue/expense/profit/insight calculations, reminder-email scheduling,
+                 # client-portal magic-link auth
 npm run test:e2e # 12 end-to-end tests — full booking journey (keyboard/ARIA-checked), admin
                  # auth guard, rate-limit-on-brute-force, live content edits, expense entry,
                  # sign-out
@@ -88,7 +89,17 @@ Beyond booking management, Michelle has a real profit/loss view:
 
 This intentionally does not fabricate a rating/scoring system for the practice — every number traces to a real row in the database.
 
-## 7. Known limitations / good next iterations
+## 7. Client portal (`/portal`)
+
+Clients don't have passwords — they enter their email, get a single-use sign-in link (expires in 30 minutes), and land on a page listing their upcoming and past appointments (`src/lib/portal-auth.ts`, `src/lib/client-session.ts`). The response to a link request is identical whether or not the email matches a client, and only known clients actually get emailed, so this can't be used to check who is or isn't a client, nor to spam an arbitrary inbox.
+
+Each completed appointment has a **downloadable/printable receipt** (`/portal/receipt/[id]`) showing the practice details, session, date, duration, format, payment method, and amount — genuinely useful for clients claiming partial reimbursement from a Belgian mutuality. Authorization is checked on every receipt view (the signed-in email must match the appointment's), and a mismatch or a not-yet-completed appointment both return a plain 404, never a hint about what exists.
+
+## 8. Day-before reminder emails
+
+A reminder email goes out roughly 24 hours before each confirmed appointment, sent by an in-process scheduler that starts when the server boots (`src/instrumentation.ts` + `src/lib/reminders.ts`) — no external cron service to configure. `Appointment.reminderSentAt` guarantees it's sent at most once per appointment even if the scheduler's periodic check overlaps itself.
+
+## 9. Known limitations / good next iterations
 
 - `about.credentials` is edited as raw JSON in `/admin/content` — functional, but a dedicated add/remove-row UI would be friendlier for non-technical editing
 - Translations (FR/NL) are structurally supported (`WebsiteContent.locale`) but no French/Dutch copy has been written yet
@@ -97,3 +108,5 @@ This intentionally does not fabricate a rating/scoring system for the practice �
 - No expense receipt/attachment upload — expenses are amount + category + description only
 - No automated screen-reader test — see the accessibility section above
 - The booking advisory lock (see section 3) serializes all booking writes through one lock. This is the right trade-off for a single practitioner's volume — bookings are fast, so brief queuing under a realistic burst is imperceptible — but it does mean a genuinely pathological number of truly simultaneous unrelated bookings (tested: 10 at once, for unrelated future dates) can start timing out rather than all succeeding promptly. If booking volume ever grows enough for that to matter, narrow the lock to a per-day key instead of one global key.
+- The reminder-email scheduler is a plain `setInterval` in the running process (see section 8), same deploy assumption as the booking lock: one long-lived Node instance. It would need to move to a real job queue if this ever runs as multiple instances.
+- The client portal has no rate limit on how many appointments/receipts a signed-in session can view — acceptable for a solo practice's realistic volume, but worth revisiting if that changes.

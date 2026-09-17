@@ -167,6 +167,20 @@ model Expense {
   @@index([date])
 }
 
+// Passwordless login for the client portal (/portal) — a client requests a
+// link by email, we email a single-use token instead of maintaining
+// passwords for people who booked a handful of sessions.
+model ClientLoginToken {
+  id        String    @id @default(cuid())
+  email     String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([email])
+}
+
 model AuditEvent {
   id            String   @id @default(cuid())
   actorId       String?

@@ -1,6 +1,6 @@
-# Michelle Ihirwe — booking website & practice management
+# Novaturient Beauty — booking website & practice management
 
-A production Next.js application for **Michelle Ihirwe, Sexologist & Intimacy Therapist**: a public marketing/booking site built to the approved **Option 3: Private Sanctuary** design, plus a private admin area for managing appointments, availability, pricing, reviews, website content, and business finances (revenue, expenses, profit, and data-backed insights) without touching code.
+A production Next.js application for **Novaturient Beauty**, the practice of **Michelle Ihirwe, Sexologist & Intimacy Therapist**: a public marketing/booking site built to the approved **Option 3: Private Sanctuary** design, a passwordless client portal for appointment history and session receipts, plus a private admin area for managing appointments, availability, pricing, reviews, website content, and business finances (revenue, expenses, profit, and data-backed insights) without touching code.
 
 Read [`docs/HANDOFF.md`](docs/HANDOFF.md) for the pre-launch checklist, accessibility/privacy status, and the content decisions Michelle still needs to approve before this goes live for real clients.
 
@@ -71,6 +71,10 @@ Booking confirmations, reschedule/cancel links, and review invites are sent by e
 3. Create an API key and set `RESEND_API_KEY` in `.env` (locally) or your host's environment variables (production).
 4. Set `EMAIL_FROM` to an address on your verified domain, e.g. `"Michelle Ihirwe <no-reply@yourdomain.com>"`.
 
+## Day-before reminder emails
+
+`src/instrumentation.ts` starts a lightweight in-process scheduler when the server boots — no external cron service needed. Every 15 minutes it checks for confirmed appointments starting within the next 24 hours that haven't been reminded yet (see `src/lib/reminders.ts`), sends the reminder, and marks the appointment so it's never sent twice. This relies on the app running as a single long-lived process, which is how `render.yaml` deploys it.
+
 ## Deploying to Render
 
 This repo includes a [`render.yaml`](render.yaml) Blueprint that creates the Postgres database and web service together, wires `DATABASE_URL` between them automatically, and generates a random `SESSION_SECRET` — you only need to fill in the rest.
@@ -93,6 +97,7 @@ src/app/                  Next.js routes
   (public pages)          /, /about, /sessions, /book, /reviews, /contact, /privacy, /terms
   /manage/[token]          Client-facing reschedule/cancel (secure link, emailed after booking)
   /reviews/write/[token]   Client-facing review submission (secure link, emailed after a completed session)
+  /portal                  Client portal — passwordless (email-link) sign-in, appointment history, downloadable session receipts
   /admin/                  Admin area — login is public, everything else requires a session
   /api/                    Booking, availability, and account API routes
 src/components/           React components (public site, booking wizard, admin widgets)

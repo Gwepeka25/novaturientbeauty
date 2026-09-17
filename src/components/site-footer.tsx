@@ -20,6 +20,7 @@ export function SiteFooter() {
         <Link href="/terms">Terms</Link>
         <Link href="/contact">Contact</Link>
         <Link href="/reviews">Reviews</Link>
+        <Link href="/portal">Client portal</Link>
       </nav>
     </footer>
   );

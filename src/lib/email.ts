@@ -118,6 +118,17 @@ export async function sendReviewInviteEmail(
   await sendEmail(clientEmail, "A quick follow-up", html);
 }
 
+export async function sendClientPortalLinkEmail(email: string, portalUrl: string) {
+  const html = `
+    <p>Hi,</p>
+    <p>Use this secure link to view your appointment history and download session receipts:</p>
+    <p><a href="${portalUrl}">${portalUrl}</a></p>
+    <p>This link is single-use and expires in 30 minutes. If you didn't request it, you can safely ignore this email.</p>
+    <p>— ${escapeHtml(BRAND_NAME)}</p>
+  `;
+  await sendEmail(email, "Your client portal link", html);
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
