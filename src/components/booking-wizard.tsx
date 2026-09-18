@@ -1,9 +1,52 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { formatFeeCents } from "@/lib/services-data";
 import { t, LOCALE_INTL_TAG, type Locale } from "@/lib/i18n";
+
+const DRAFT_KEY = "nb_booking_draft";
+const DRAFT_TTL_MS = 48 * 60 * 60 * 1000; // stale after 48h — a stored date/slot may no longer be valid
+
+type BookingDraft = {
+  savedAt: number;
+  format: "in_person" | "online" | null;
+  serviceId: string | null;
+  dateISO: string | null;
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string;
+  clientNote: string;
+};
+
+function loadDraft(): BookingDraft | null {
+  try {
+    const raw = window.localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const draft = JSON.parse(raw) as BookingDraft;
+    if (Date.now() - draft.savedAt > DRAFT_TTL_MS) return null;
+    return draft;
+  } catch {
+    return null;
+  }
+}
+
+function saveDraft(draft: BookingDraft) {
+  try {
+    window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    // Private browsing / full storage — losing the draft is a minor
+    // inconvenience, never worth surfacing to the client.
+  }
+}
+
+function clearDraft() {
+  try {
+    window.localStorage.removeItem(DRAFT_KEY);
+  } catch {
+    // See saveDraft.
+  }
+}
 
 type Service = {
   id: string;
@@ -78,6 +121,74 @@ export function BookingWizard({
 
   const dateOptions = useMemo(() => buildDateOptions(minDate, maxDate, locale), [minDate, maxDate, locale]);
 
+  const [hydrated, setHydrated] = useState(false);
+  const pendingRestoreDateRef = useRef<string | null>(null);
+
+  // Restore an in-progress booking (closing the tab mid-flow shouldn't mean
+  // starting over) — runs once on mount, before the save effect below.
+  useEffect(() => {
+    const draft = loadDraft();
+    if (draft) {
+      // Restoring saved wizard state after mount, from a browser-only store
+      // (localStorage) that isn't available during server rendering — this
+      // has to happen in an effect, not a lazy useState initializer, or the
+      // client's first hydration pass would mismatch the server-rendered
+      // (necessarily draft-less) HTML.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (draft.format) setFormat(draft.format);
+      if (draft.serviceId) setServiceId(draft.serviceId);
+      if (draft.clientName) setClientName(draft.clientName);
+      if (draft.clientEmail) setClientEmail(draft.clientEmail);
+      if (draft.clientPhone) setClientPhone(draft.clientPhone);
+      if (draft.clientNote) setClientNote(draft.clientNote);
+
+      const dateStillValid = draft.dateISO && dateOptions.some((d) => d.iso === draft.dateISO);
+      if (draft.format && draft.serviceId && dateStillValid) {
+        setDateISO(draft.dateISO);
+        setStep("datetime");
+        pendingRestoreDateRef.current = draft.dateISO;
+      } else if (draft.format && draft.serviceId) {
+        setStep("datetime");
+      } else if (draft.format) {
+        setStep("service");
+      }
+    }
+    setHydrated(true);
+    // Only ever runs once, on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Once the restored format/service have actually taken effect (service is
+  // derived from serviceId a render later), fetch slots for the restored date.
+  // loadSlots is intentionally left out of the deps: it's a plain function
+  // recreated every render, and the pendingRestoreDateRef guard already
+  // makes this run at most once regardless.
+  useEffect(() => {
+    if (pendingRestoreDateRef.current && service && format) {
+      const date = pendingRestoreDateRef.current;
+      pendingRestoreDateRef.current = null;
+      void loadSlots(date, format);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [service, format]);
+
+  // Keep the draft current as the client fills in the wizard. Skipped until
+  // the restore effect above has run, so it never overwrites a saved draft
+  // with the wizard's initial empty state.
+  useEffect(() => {
+    if (!hydrated || step === "success") return;
+    saveDraft({
+      savedAt: Date.now(),
+      format,
+      serviceId,
+      dateISO,
+      clientName,
+      clientEmail,
+      clientPhone,
+      clientNote,
+    });
+  }, [hydrated, step, format, serviceId, dateISO, clientName, clientEmail, clientPhone, clientNote]);
+
   async function loadSlots(date: string, fmt: "in_person" | "online") {
     if (!service) return;
     setSlotsLoading(true);
@@ -137,6 +248,7 @@ export function BookingWizard({
       }
       setConfirmation(json);
       setStep("success");
+      clearDraft();
     } catch {
       setError("Something went wrong. Please check your connection and try again.");
     } finally {
