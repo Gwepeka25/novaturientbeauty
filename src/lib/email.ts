@@ -102,6 +102,40 @@ export async function sendAppointmentReminderEmail(appointment: AppointmentForEm
   await sendEmail(appointment.clientEmail, "Reminder: your appointment tomorrow", html);
 }
 
+type AdminBookingNotification = {
+  publicCode: string;
+  startsAt: Date;
+  serviceName: string;
+  format: "in_person" | "online";
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string | null;
+  clientNote: string | null;
+};
+
+// Unlike the client-facing emails above, this one is deliberately detailed
+// — Michelle needs the service/format/contact info to prepare and follow
+// up, and it's her own inbox rather than a shared/visible one, so the
+// neutral-subject-line discretion that protects clients doesn't apply here.
+export async function sendAdminBookingNotificationEmail(
+  adminEmail: string,
+  appointment: AdminBookingNotification,
+) {
+  const html = `
+    <p>New booking received.</p>
+    <ul>
+      <li><strong>When:</strong> ${escapeHtml(formatLocalDateTime(appointment.startsAt))} (Brussels time)</li>
+      <li><strong>Service:</strong> ${escapeHtml(appointment.serviceName)}</li>
+      <li><strong>Format:</strong> ${appointment.format === "in_person" ? "In person" : "Online"}</li>
+      <li><strong>Client:</strong> ${escapeHtml(appointment.clientName)} — ${escapeHtml(appointment.clientEmail)}${appointment.clientPhone ? ` — ${escapeHtml(appointment.clientPhone)}` : ""}</li>
+      ${appointment.clientNote ? `<li><strong>Note from client:</strong> ${escapeHtml(appointment.clientNote)}</li>` : ""}
+      <li><strong>Reference:</strong> ${escapeHtml(appointment.publicCode)}</li>
+    </ul>
+    <p><a href="${siteUrl}/admin/appointments">View in the admin dashboard</a></p>
+  `;
+  await sendEmail(adminEmail, `New booking: ${formatLocalDateTime(appointment.startsAt)}`, html);
+}
+
 export async function sendReviewInviteEmail(
   clientEmail: string,
   clientName: string,

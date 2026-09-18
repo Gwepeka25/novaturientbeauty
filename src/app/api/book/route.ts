@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { bookingRequestSchema } from "@/lib/validation";
 import { createAppointment, SlotUnavailableError } from "@/lib/booking";
-import { sendBookingConfirmationEmail } from "@/lib/email";
+import { sendBookingConfirmationEmail, sendAdminBookingNotificationEmail } from "@/lib/email";
 import { rateLimit } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { formatLocalDateTime } from "@/lib/timezone";
@@ -62,6 +62,27 @@ export async function POST(request: NextRequest) {
       clientEmail: appointment.clientEmail,
       clientName: appointment.clientName,
     });
+
+    // Best-effort: Michelle not being notified of a booking is a real
+    // problem, but it should never make a successful booking look like it
+    // failed to the client.
+    try {
+      const admin = await prisma.adminUser.findFirst();
+      if (admin) {
+        await sendAdminBookingNotificationEmail(admin.email, {
+          publicCode: appointment.publicCode,
+          startsAt: appointment.startsAt,
+          serviceName: service.name,
+          format: appointment.format as "in_person" | "online",
+          clientName: appointment.clientName,
+          clientEmail: appointment.clientEmail,
+          clientPhone: appointment.clientPhone,
+          clientNote: appointment.clientNote,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to send admin booking notification:", error);
+    }
 
     return NextResponse.json({
       publicCode: appointment.publicCode,
