@@ -9,6 +9,7 @@ export type JoinWaitlistInput = {
   clientEmail: string;
   clientPhone?: string;
   note?: string;
+  locale?: string;
 };
 
 export class WaitlistServiceUnavailableError extends Error {
@@ -33,6 +34,7 @@ export async function joinWaitlist(input: JoinWaitlistInput) {
       clientEmail: input.clientEmail,
       clientPhone: input.clientPhone || null,
       note: input.note || null,
+      locale: input.locale ?? "en",
     },
   });
 
@@ -44,6 +46,7 @@ export async function joinWaitlist(input: JoinWaitlistInput) {
       serviceName: service.name,
       date: entry.date,
       format: entry.format as "in_person" | "online",
+      locale: entry.locale,
     });
   } catch (error) {
     console.error("Failed to send waitlist confirmation email:", error);
@@ -81,6 +84,7 @@ export async function notifyWaitlistForOpening(params: {
         serviceName: entry.service.name,
         date: entry.date,
         format: entry.format as "in_person" | "online",
+        locale: entry.locale,
       });
       await prisma.waitlistEntry.update({
         where: { id: entry.id },

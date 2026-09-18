@@ -101,6 +101,9 @@ model Appointment {
   clientEmail      String
   clientPhone      String?
   clientNote       String? // optional, never required
+  locale           String   @default("en") // "en" | "fr" | "nl" — the client's chosen
+                                             // language at booking time, so later emails
+                                             // (reminder, receipt, etc.) can be sent in it
   privateOpsNote   String? // admin-only operational note, never clinical
   cashPaid         Boolean  @default(false)
   onlineMeetingUrl String? // only set/sent after confirmation
@@ -221,6 +224,7 @@ model WaitlistEntry {
   clientEmail String
   clientPhone String?
   note        String?
+  locale      String   @default("en") // "en" | "fr" | "nl"
   status      String   @default("pending") // pending|notified|cancelled
   notifiedAt  DateTime?
   createdAt   DateTime @default(now())

@@ -48,6 +48,7 @@ export async function updateAppointmentStatus(appointmentId: string, status: str
         cashPaid: appointment.cashPaid,
         amountCents: appointment.priceCentsAtBooking ?? appointment.service.priceCents,
         currency: appointment.service.currency,
+        locale: appointment.locale,
       }).catch((error) => {
         console.error("Failed to send receipt email:", error);
       });

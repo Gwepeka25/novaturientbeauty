@@ -21,6 +21,7 @@ export type CreateAppointmentInput = {
   clientEmail: string;
   clientPhone?: string;
   clientNote?: string;
+  locale?: string;
 };
 
 export async function createAppointment(input: CreateAppointmentInput) {
@@ -63,6 +64,7 @@ export async function createAppointment(input: CreateAppointmentInput) {
             clientEmail: input.clientEmail,
             clientPhone: input.clientPhone || null,
             clientNote: input.clientNote || null,
+            locale: input.locale ?? "en",
             priceCentsAtBooking: service.priceCents,
             manageToken,
             manageTokenExp,

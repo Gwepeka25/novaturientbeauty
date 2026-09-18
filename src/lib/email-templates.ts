@@ -20,10 +20,11 @@ function translatedDefault(key: EmailTemplateKey, locale: string): EmailTemplate
  *   2. The compiled-in translation, for templates translated so far.
  *   3. The English template (its own approved row, or the English default).
  *
- * Note: every send* function in src/lib/email.ts currently calls this with
- * locale "en" — appointments don't yet record which language a client
- * booked in, so this is wired up for admin preview/editing only, not for
- * automatically sending in a client's chosen language.
+ * Client-facing send* functions in src/lib/email.ts pass the appointment's
+ * (or waitlist entry's) own `locale` field, captured from the nb_locale
+ * cookie at booking/waitlist-join time — see src/lib/locale-request.ts.
+ * admin_booking_notification and client_portal_link have no appointment
+ * context to draw a locale from and always send in English.
  */
 export async function getEmailTemplate(key: EmailTemplateKey, locale = "en"): Promise<EmailTemplate> {
   const row = await prisma.emailTemplate.findUnique({ where: { key_locale: { key, locale } } });

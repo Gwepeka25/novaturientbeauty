@@ -5,6 +5,7 @@ import { sendBookingConfirmationEmail, sendAdminBookingNotificationEmail } from 
 import { rateLimit } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { formatLocalDateTime } from "@/lib/timezone";
+import { getRequestLocale } from "@/lib/locale-request";
 
 function getClientIp(request: NextRequest): string {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
@@ -52,6 +53,7 @@ export async function POST(request: NextRequest) {
       clientEmail: data.clientEmail,
       clientPhone: data.clientPhone,
       clientNote: data.clientNote,
+      locale: getRequestLocale(request),
     });
 
     await sendBookingConfirmationEmail({
@@ -61,6 +63,7 @@ export async function POST(request: NextRequest) {
       manageToken: appointment.manageToken,
       clientEmail: appointment.clientEmail,
       clientName: appointment.clientName,
+      locale: appointment.locale,
     });
 
     // Best-effort: Michelle not being notified of a booking is a real

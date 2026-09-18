@@ -18,7 +18,7 @@ export async function createReviewInvite(appointmentId: string) {
     data: { appointmentId, token, tokenExp },
   });
 
-  await sendReviewInviteEmail(appointment.clientEmail, appointment.clientName, token);
+  await sendReviewInviteEmail(appointment.clientEmail, appointment.clientName, token, appointment.locale);
 
   return invite;
 }

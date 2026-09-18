@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { waitlistRequestSchema } from "@/lib/validation";
 import { joinWaitlist, WaitlistServiceUnavailableError } from "@/lib/waitlist";
 import { rateLimit } from "@/lib/rate-limit";
+import { getRequestLocale } from "@/lib/locale-request";
 
 function getClientIp(request: NextRequest): string {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
@@ -37,6 +38,7 @@ export async function POST(request: NextRequest) {
       clientEmail: data.clientEmail,
       clientPhone: data.clientPhone,
       note: data.note,
+      locale: getRequestLocale(request),
     });
     return NextResponse.json({ ok: true });
   } catch (error) {

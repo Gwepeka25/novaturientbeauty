@@ -42,8 +42,9 @@ async function renderAndSend(
   to: string,
   vars: Record<string, string>,
   attachments?: { filename: string; content: string }[],
+  locale = "en",
 ) {
-  const template = await getEmailTemplate(key);
+  const template = await getEmailTemplate(key, locale);
   const { subject, bodyHtml } = renderEmailTemplate(template, { ...baseVars(), ...vars });
   await sendEmail(to, subject, bodyHtml, attachments);
 }
@@ -55,6 +56,7 @@ type AppointmentForEmail = {
   manageToken: string;
   clientEmail: string;
   clientName: string;
+  locale?: string;
 };
 
 export async function sendBookingConfirmationEmail(appointment: AppointmentForEmail) {
@@ -70,6 +72,7 @@ export async function sendBookingConfirmationEmail(appointment: AppointmentForEm
       manageUrl,
     },
     ics ? [{ filename: "appointment.ics", content: Buffer.from(ics).toString("base64") }] : undefined,
+    appointment.locale,
   );
 }
 
@@ -105,12 +108,18 @@ function buildIcs(appointment: AppointmentForEmail): string | null {
 
 export async function sendAppointmentReminderEmail(appointment: AppointmentForEmail) {
   const manageUrl = `${siteUrl}/manage/${appointment.manageToken}`;
-  await renderAndSend("appointment_reminder", appointment.clientEmail, {
-    clientName: escapeHtml(appointment.clientName),
-    appointmentDateTime: escapeHtml(formatLocalDateTime(appointment.startsAt)),
-    publicCode: escapeHtml(appointment.publicCode),
-    manageUrl,
-  });
+  await renderAndSend(
+    "appointment_reminder",
+    appointment.clientEmail,
+    {
+      clientName: escapeHtml(appointment.clientName),
+      appointmentDateTime: escapeHtml(formatLocalDateTime(appointment.startsAt)),
+      publicCode: escapeHtml(appointment.publicCode),
+      manageUrl,
+    },
+    undefined,
+    appointment.locale,
+  );
 }
 
 type CompletedAppointmentForReceipt = {
@@ -124,23 +133,30 @@ type CompletedAppointmentForReceipt = {
   cashPaid: boolean;
   amountCents: number;
   currency: string;
+  locale?: string;
 };
 
 // Sent automatically once a session is marked completed, so the client has
 // proof of payment without needing to log into the portal to see the same
 // thing on the receipt page there.
 export async function sendReceiptEmail(appointment: CompletedAppointmentForReceipt) {
-  await renderAndSend("receipt", appointment.clientEmail, {
-    clientName: escapeHtml(appointment.clientName),
-    appointmentDateTime: escapeHtml(formatLocalDateTime(appointment.startsAt)),
-    practitionerFull: escapeHtml(PRACTITIONER_FULL),
-    serviceName: escapeHtml(appointment.serviceName),
-    durationMin: String(appointment.durationMin),
-    formatLabel: appointment.format === "in_person" ? "In person" : "Online",
-    paymentMethod: appointment.cashPaid ? "Cash" : "Arranged privately",
-    amount: escapeHtml(formatFeeCents(appointment.amountCents, appointment.currency)),
-    publicCode: escapeHtml(appointment.publicCode),
-  });
+  await renderAndSend(
+    "receipt",
+    appointment.clientEmail,
+    {
+      clientName: escapeHtml(appointment.clientName),
+      appointmentDateTime: escapeHtml(formatLocalDateTime(appointment.startsAt)),
+      practitionerFull: escapeHtml(PRACTITIONER_FULL),
+      serviceName: escapeHtml(appointment.serviceName),
+      durationMin: String(appointment.durationMin),
+      formatLabel: appointment.format === "in_person" ? "In person" : "Online",
+      paymentMethod: appointment.cashPaid ? "Cash" : "Arranged privately",
+      amount: escapeHtml(formatFeeCents(appointment.amountCents, appointment.currency)),
+      publicCode: escapeHtml(appointment.publicCode),
+    },
+    undefined,
+    appointment.locale,
+  );
 }
 
 type AdminBookingNotification = {
@@ -181,12 +197,16 @@ export async function sendReviewInviteEmail(
   clientEmail: string,
   clientName: string,
   token: string,
+  locale = "en",
 ) {
   const reviewUrl = `${siteUrl}/reviews/write/${token}`;
-  await renderAndSend("review_invite", clientEmail, {
-    clientName: escapeHtml(clientName),
-    reviewUrl,
-  });
+  await renderAndSend(
+    "review_invite",
+    clientEmail,
+    { clientName: escapeHtml(clientName), reviewUrl },
+    undefined,
+    locale,
+  );
 }
 
 type WaitlistNotice = {
@@ -195,33 +215,49 @@ type WaitlistNotice = {
   serviceName: string;
   date: string; // "YYYY-MM-DD"
   format: "in_person" | "online";
+  locale?: string;
 };
 
 export async function sendWaitlistJoinedEmail(entry: WaitlistNotice) {
-  await renderAndSend("waitlist_joined", entry.clientEmail, {
-    clientName: escapeHtml(entry.clientName),
-    serviceName: escapeHtml(entry.serviceName),
-    formatLabel: entry.format === "in_person" ? "in person" : "online",
-    dateLabel: escapeHtml(formatLocalDateLabel(entry.date)),
-    bookUrl: `${siteUrl}/book`,
-  });
+  await renderAndSend(
+    "waitlist_joined",
+    entry.clientEmail,
+    {
+      clientName: escapeHtml(entry.clientName),
+      serviceName: escapeHtml(entry.serviceName),
+      formatLabel: entry.format === "in_person" ? "in person" : "online",
+      dateLabel: escapeHtml(formatLocalDateLabel(entry.date)),
+      bookUrl: `${siteUrl}/book`,
+    },
+    undefined,
+    entry.locale,
+  );
 }
 
 export async function sendWaitlistSlotAvailableEmail(entry: WaitlistNotice) {
-  await renderAndSend("waitlist_slot_available", entry.clientEmail, {
-    clientName: escapeHtml(entry.clientName),
-    serviceName: escapeHtml(entry.serviceName),
-    formatLabel: entry.format === "in_person" ? "in person" : "online",
-    dateLabel: escapeHtml(formatLocalDateLabel(entry.date)),
-    bookUrl: `${siteUrl}/book`,
-  });
+  await renderAndSend(
+    "waitlist_slot_available",
+    entry.clientEmail,
+    {
+      clientName: escapeHtml(entry.clientName),
+      serviceName: escapeHtml(entry.serviceName),
+      formatLabel: entry.format === "in_person" ? "in person" : "online",
+      dateLabel: escapeHtml(formatLocalDateLabel(entry.date)),
+      bookUrl: `${siteUrl}/book`,
+    },
+    undefined,
+    entry.locale,
+  );
 }
 
-export async function sendReengagementEmail(clientEmail: string, clientName: string) {
-  await renderAndSend("reengagement", clientEmail, {
-    clientName: escapeHtml(clientName),
-    bookUrl: `${siteUrl}/book`,
-  });
+export async function sendReengagementEmail(clientEmail: string, clientName: string, locale = "en") {
+  await renderAndSend(
+    "reengagement",
+    clientEmail,
+    { clientName: escapeHtml(clientName), bookUrl: `${siteUrl}/book` },
+    undefined,
+    locale,
+  );
 }
 
 export async function sendClientPortalLinkEmail(email: string, portalUrl: string) {

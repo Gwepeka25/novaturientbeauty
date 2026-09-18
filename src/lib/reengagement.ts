@@ -39,7 +39,7 @@ export async function sendDueReengagementEmails(): Promise<number> {
     });
     if (count === 0) continue; // another run already claimed it
 
-    await sendReengagementEmail(appointment.clientEmail, appointment.clientName);
+    await sendReengagementEmail(appointment.clientEmail, appointment.clientName, appointment.locale);
     sent++;
   }
   return sent;

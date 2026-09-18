@@ -49,9 +49,8 @@ export default async function AdminEmailTemplatesPage() {
         <code>{"{{variableName}}"}</code> placeholders listed under each template exactly as
         written; anything else is left in the email as plain text, so a typo is easy to spot
         rather than silently vanishing. Where a French or Dutch version exists, expand
-        &ldquo;Translations&rdquo; to review or edit what it actually says — these aren&rsquo;t
-        sent automatically yet (a booking doesn&rsquo;t currently record which language the
-        client used), so treat them as a preview and reference for now.
+        &ldquo;Translations&rdquo; to review or edit what it actually says — clients who book or
+        join the waitlist in that language are sent this version automatically.
       </p>
 
       {GROUPS.map((group) => (
