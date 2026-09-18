@@ -1,7 +1,8 @@
 import { Resend } from "resend";
 import { createEvent } from "ics";
 import { formatLocalDateTime, formatLocalDateLabel } from "@/lib/timezone";
-import { BRAND_NAME, PRACTITIONER_NAME } from "@/lib/site-config";
+import { formatFeeCents } from "@/lib/services-data";
+import { BRAND_NAME, PRACTITIONER_NAME, PRACTITIONER_FULL } from "@/lib/site-config";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 const emailFrom = process.env.EMAIL_FROM ?? "no-reply@example.com";
@@ -100,6 +101,42 @@ export async function sendAppointmentReminderEmail(appointment: AppointmentForEm
   `;
   // Neutral subject line — no service/appointment type revealed.
   await sendEmail(appointment.clientEmail, "Reminder: your appointment tomorrow", html);
+}
+
+type CompletedAppointmentForReceipt = {
+  publicCode: string;
+  startsAt: Date;
+  clientEmail: string;
+  clientName: string;
+  serviceName: string;
+  durationMin: number;
+  format: "in_person" | "online";
+  cashPaid: boolean;
+  amountCents: number;
+  currency: string;
+};
+
+// Sent automatically once a session is marked completed, so the client has
+// proof of payment without needing to log into the portal to see the same
+// thing on the receipt page there.
+export async function sendReceiptEmail(appointment: CompletedAppointmentForReceipt) {
+  const amount = formatFeeCents(appointment.amountCents, appointment.currency);
+  const html = `
+    <p>Hi ${escapeHtml(appointment.clientName)},</p>
+    <p>Here's your receipt for the session on ${escapeHtml(formatLocalDateTime(appointment.startsAt))} (Brussels time).</p>
+    <table cellpadding="4" cellspacing="0">
+      <tr><td>Practitioner</td><td>${escapeHtml(PRACTITIONER_FULL)}</td></tr>
+      <tr><td>Session</td><td>${escapeHtml(appointment.serviceName)}</td></tr>
+      <tr><td>Duration</td><td>${appointment.durationMin} minutes</td></tr>
+      <tr><td>Format</td><td>${appointment.format === "in_person" ? "In person" : "Online"}</td></tr>
+      <tr><td>Payment method</td><td>${appointment.cashPaid ? "Cash" : "Arranged privately"}</td></tr>
+      <tr><td>Amount</td><td>${escapeHtml(amount)}</td></tr>
+      <tr><td>Reference</td><td>${escapeHtml(appointment.publicCode)}</td></tr>
+    </table>
+    <p>— ${escapeHtml(BRAND_NAME)}</p>
+  `;
+  // Neutral subject line — no service/appointment type revealed.
+  await sendEmail(appointment.clientEmail, "Your session receipt", html);
 }
 
 type AdminBookingNotification = {

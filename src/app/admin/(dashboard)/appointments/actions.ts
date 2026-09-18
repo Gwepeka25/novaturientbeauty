@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { setAppointmentStatus, type AppointmentStatus } from "@/lib/booking";
 import { createReviewInvite } from "@/lib/reviews";
+import { sendReceiptEmail } from "@/lib/email";
 
 const STATUS_VALUES = [
   "pending",
@@ -23,11 +24,34 @@ export async function updateAppointmentStatus(appointmentId: string, status: str
 
   await setAppointmentStatus(appointmentId, parsed.data as AppointmentStatus, session.sub);
 
-  // Completing an appointment is the trigger for inviting a review.
+  // Completing an appointment is the trigger for inviting a review and for
+  // sending the client a receipt — both best-effort, since a failed email
+  // should never undo an otherwise-successful status change.
   if (parsed.data === "completed") {
     await createReviewInvite(appointmentId).catch((error) => {
       console.error("Failed to create review invite:", error);
     });
+
+    const appointment = await prisma.appointment.findUnique({
+      where: { id: appointmentId },
+      include: { service: true },
+    });
+    if (appointment) {
+      await sendReceiptEmail({
+        publicCode: appointment.publicCode,
+        startsAt: appointment.startsAt,
+        clientEmail: appointment.clientEmail,
+        clientName: appointment.clientName,
+        serviceName: appointment.service.name,
+        durationMin: appointment.service.durationMin,
+        format: appointment.format as "in_person" | "online",
+        cashPaid: appointment.cashPaid,
+        amountCents: appointment.priceCentsAtBooking ?? appointment.service.priceCents,
+        currency: appointment.service.currency,
+      }).catch((error) => {
+        console.error("Failed to send receipt email:", error);
+      });
+    }
   }
 
   revalidatePath("/admin/appointments");
