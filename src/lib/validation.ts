@@ -30,3 +30,14 @@ export const waitlistRequestSchema = z.object({
 });
 
 export type WaitlistRequest = z.infer<typeof waitlistRequestSchema>;
+
+export const workshopRegistrationRequestSchema = z.object({
+  workshopId: z.string().min(1),
+  clientName: z.string().trim().min(1).max(120),
+  clientEmail: z.string().trim().email().max(200),
+  clientPhone: z.string().trim().max(40).optional().or(z.literal("")),
+  payOnline: z.boolean().optional(),
+  website: z.string().max(0).optional().or(z.literal("")),
+});
+
+export type WorkshopRegistrationRequest = z.infer<typeof workshopRegistrationRequestSchema>;

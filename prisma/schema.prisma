@@ -292,6 +292,51 @@ model GiftCode {
   appointments Appointment[]
 }
 
+// A scheduled group session with a fixed number of spots — a different
+// shape from Appointment (many attendees per slot, not one). Payment is
+// per-registration: cash by default, or online via Stripe once configured
+// (see src/lib/stripe.ts) — same dormant-until-configured pattern as the
+// rest of the site.
+model Workshop {
+  id           String   @id @default(cuid())
+  title        String
+  description  String
+  startsAt     DateTime // UTC
+  endsAt       DateTime // UTC
+  format       String // "in_person" | "online"
+  location     String? // address or meeting link, shown to registrants
+  capacity     Int
+  priceCents   Int
+  currency     String   @default("EUR")
+  active       Boolean  @default(true) // admin can unpublish without deleting history
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  registrations WorkshopRegistration[]
+
+  @@index([startsAt])
+}
+
+model WorkshopRegistration {
+  id             String    @id @default(cuid())
+  workshopId     String
+  workshop       Workshop  @relation(fields: [workshopId], references: [id])
+  clientName     String
+  clientEmail    String
+  clientPhone    String?
+  locale         String    @default("en")
+  status         String    @default("confirmed") // confirmed | cancelled_by_client | cancelled_by_practitioner
+  cashPaid       Boolean   @default(false)
+  paidOnlineAt   DateTime?
+  stripeCheckoutSessionId String? @unique
+  manageToken    String    @unique
+  manageTokenExp DateTime
+  registeredAt   DateTime  @default(now())
+
+  @@index([workshopId])
+  @@index([clientEmail])
+}
+
 model AuditEvent {
   id            String   @id @default(cuid())
   actorId       String?

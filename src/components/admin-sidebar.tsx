@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: "/admin/clients", label: "Clients" },
   { href: "/admin/packages", label: "Packages" },
   { href: "/admin/gift-codes", label: "Gift codes" },
+  { href: "/admin/workshops", label: "Workshops" },
   { href: "/admin/availability", label: "Availability" },
   { href: "/admin/services", label: "Services & fees" },
   { href: "/admin/reviews", label: "Reviews" },

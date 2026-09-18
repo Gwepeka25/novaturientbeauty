@@ -21,7 +21,8 @@ export type EmailTemplateKey =
   | "client_portal_link"
   | "waitlist_joined"
   | "waitlist_slot_available"
-  | "reengagement";
+  | "reengagement"
+  | "workshop_registration_confirmation";
 
 export const EMAIL_TEMPLATE_KEYS: EmailTemplateKey[] = [
   "booking_confirmation",
@@ -33,6 +34,7 @@ export const EMAIL_TEMPLATE_KEYS: EmailTemplateKey[] = [
   "waitlist_joined",
   "waitlist_slot_available",
   "reengagement",
+  "workshop_registration_confirmation",
 ];
 
 export type EmailTemplate = { subject: string; bodyHtml: string };
@@ -174,6 +176,18 @@ export const EMAIL_TEMPLATE_DEFAULTS: Record<EmailTemplateKey, EmailTemplateDefa
 <p>You can book a time here, whenever suits: <a href="{{bookUrl}}">{{bookUrl}}</a></p>
 <p>— {{brandName}}</p>`,
   },
+  workshop_registration_confirmation: {
+    label: "Workshop registration confirmation",
+    description: "Sent to a client immediately after they register for a workshop.",
+    variables: ["clientName", "workshopTitle", "workshopDateTime", "formatLabel", "location", "manageUrl"],
+    subject: "You're registered — {{workshopTitle}}",
+    bodyHtml: `<p>Hi {{clientName}},</p>
+<p>You're registered for {{workshopTitle}} on {{workshopDateTime}} (Brussels time), {{formatLabel}}.</p>
+<p>{{location}}</p>
+<p>You can cancel your spot here if you need to: <a href="{{manageUrl}}">{{manageUrl}}</a></p>
+<p>See you there.</p>
+<p>— {{brandName}}</p>`,
+  },
 };
 
 // French/Dutch subject+body for the client-facing templates. Deliberately
@@ -254,6 +268,15 @@ export const EMAIL_TEMPLATE_DEFAULTS_FR: Partial<Record<EmailTemplateKey, EmailT
 <p>Vous pouvez réserver un créneau ici, quand cela vous convient : <a href="{{bookUrl}}">{{bookUrl}}</a></p>
 <p>— {{brandName}}</p>`,
   },
+  workshop_registration_confirmation: {
+    subject: "Votre inscription est confirmée — {{workshopTitle}}",
+    bodyHtml: `<p>Bonjour {{clientName}},</p>
+<p>Vous êtes inscrit(e) à {{workshopTitle}} le {{workshopDateTime}} (heure de Bruxelles), {{formatLabel}}.</p>
+<p>{{location}}</p>
+<p>Vous pouvez annuler votre place ici si besoin : <a href="{{manageUrl}}">{{manageUrl}}</a></p>
+<p>À bientôt.</p>
+<p>— {{brandName}}</p>`,
+  },
 };
 
 export const EMAIL_TEMPLATE_DEFAULTS_NL: Partial<Record<EmailTemplateKey, EmailTemplate>> = {
@@ -326,6 +349,15 @@ export const EMAIL_TEMPLATE_DEFAULTS_NL: Partial<Record<EmailTemplateKey, EmailT
     bodyHtml: `<p>Hoi {{clientName}},</p>
 <p>Het is even geleden sinds je laatste sessie — we wilden je gewoon laten weten dat de deur openstaat wanneer je terug wil komen.</p>
 <p>Je kan hier een moment boeken, wanneer het jou past: <a href="{{bookUrl}}">{{bookUrl}}</a></p>
+<p>— {{brandName}}</p>`,
+  },
+  workshop_registration_confirmation: {
+    subject: "Je inschrijving is bevestigd — {{workshopTitle}}",
+    bodyHtml: `<p>Hoi {{clientName}},</p>
+<p>Je bent ingeschreven voor {{workshopTitle}} op {{workshopDateTime}} (Brusselse tijd), {{formatLabel}}.</p>
+<p>{{location}}</p>
+<p>Je kan je plek hier annuleren als dat nodig is: <a href="{{manageUrl}}">{{manageUrl}}</a></p>
+<p>Tot dan.</p>
 <p>— {{brandName}}</p>`,
   },
 };

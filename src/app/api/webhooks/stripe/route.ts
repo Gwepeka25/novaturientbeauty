@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { constructWebhookEvent } from "@/lib/stripe";
 import { markAppointmentPaidOnline } from "@/lib/booking";
+import { markWorkshopRegistrationPaidOnline } from "@/lib/workshops";
 
 // This route's fulfillment logic is deliberately idempotent (see
 // markAppointmentPaidOnline) — Stripe retries webhook deliveries that
@@ -30,9 +31,11 @@ export async function POST(request: NextRequest) {
     try {
       if (kind === "appointment" && session.metadata?.appointmentId) {
         await markAppointmentPaidOnline(session.metadata.appointmentId, session.id);
+      } else if (kind === "workshop_registration" && session.metadata?.registrationId) {
+        await markWorkshopRegistrationPaidOnline(session.metadata.registrationId, session.id);
       }
-      // Other kinds (workshop registrations, digital resource purchases)
-      // register their own fulfillment as those features are built.
+      // Other kinds (digital resource purchases) register their own
+      // fulfillment as that feature is built.
     } catch (error) {
       console.error("Failed to fulfill Stripe checkout session:", session.id, error);
       return NextResponse.json({ error: "Fulfillment failed" }, { status: 500 });

@@ -56,6 +56,18 @@ export type GiftCodeSaleRow = {
   currency: string;
 };
 
+// A confirmed workshop registration is its own revenue event, dated on the
+// day the client registered (i.e. committed to pay) — same reasoning as
+// PackageSaleRow and GiftCodeSaleRow, not the day the workshop itself runs.
+export type WorkshopRegistrationRevenueRow = {
+  date: string; // "YYYY-MM-DD"
+  reference: string;
+  workshopTitle: string;
+  clientName: string;
+  amountCents: number;
+  currency: string;
+};
+
 const CSV_HEADER = ["Date", "Type", "Description", "Reference", "Amount", "Currency"];
 
 export function buildFinancialReportCsv(
@@ -63,6 +75,7 @@ export function buildFinancialReportCsv(
   expenses: ExpenseRow[],
   packageSales: PackageSaleRow[] = [],
   giftCodeSales: GiftCodeSaleRow[] = [],
+  workshopRegistrations: WorkshopRegistrationRevenueRow[] = [],
 ): string {
   const lines: string[][] = [CSV_HEADER];
 
@@ -90,6 +103,14 @@ export function buildFinancialReportCsv(
       reference: g.reference,
       amountCents: g.amountCents,
       currency: g.currency,
+    })),
+    ...workshopRegistrations.map((w) => ({
+      date: w.date,
+      type: "Revenue" as const,
+      description: `Workshop: ${w.workshopTitle} — ${w.clientName}`,
+      reference: w.reference,
+      amountCents: w.amountCents,
+      currency: w.currency,
     })),
     ...expenses.map((e) => ({
       date: e.date,
@@ -169,6 +190,24 @@ export async function getGiftCodeSaleRowsForExport(range: { from: Date; to: Date
     purchaserName: g.purchaserName ?? "",
     amountCents: g.amountCents,
     currency: g.currency,
+  }));
+}
+
+export async function getWorkshopRegistrationRevenueRowsForExport(
+  range: { from: Date; to: Date },
+): Promise<WorkshopRegistrationRevenueRow[]> {
+  const rows = await prisma.workshopRegistration.findMany({
+    where: { status: "confirmed", registeredAt: { gte: range.from, lte: range.to } },
+    include: { workshop: true },
+    orderBy: { registeredAt: "asc" },
+  });
+  return rows.map((r) => ({
+    date: utcToLocalDateISO(r.registeredAt),
+    reference: r.id,
+    workshopTitle: r.workshop.title,
+    clientName: r.clientName,
+    amountCents: r.workshop.priceCents,
+    currency: r.workshop.currency,
   }));
 }
 

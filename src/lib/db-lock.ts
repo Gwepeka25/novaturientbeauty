@@ -29,3 +29,16 @@ export async function acquireBookingLock(
 ): Promise<void> {
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(${BOOKING_LOCK_KEY})`;
 }
+
+// Same reasoning as acquireBookingLock, applied to workshop capacity: a
+// "count confirmed registrations, then insert if under capacity" check has
+// the identical race under concurrent registrations. A separate key keeps
+// workshop registrations from needlessly queuing behind unrelated
+// appointment bookings.
+const WORKSHOP_REGISTRATION_LOCK_KEY = 727_002;
+
+export async function acquireWorkshopRegistrationLock(
+  tx: Prisma.TransactionClient,
+): Promise<void> {
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(${WORKSHOP_REGISTRATION_LOCK_KEY})`;
+}

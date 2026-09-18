@@ -12,6 +12,7 @@ export function HomeHeader({ locale }: { locale: Locale }) {
   const NAV_LINKS = [
     { href: "/about", label: t(locale, "nav_about") },
     { href: "/sessions", label: t(locale, "nav_sessions") },
+    { href: "/workshops", label: t(locale, "nav_workshops") },
     { href: "/reviews", label: t(locale, "nav_reviews") },
     { href: "/contact", label: t(locale, "nav_contact") },
   ];

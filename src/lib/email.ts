@@ -248,6 +248,34 @@ export async function sendClientPortalLinkEmail(email: string, portalUrl: string
   await renderAndSend("client_portal_link", email, { portalUrl });
 }
 
+type WorkshopRegistrationForEmail = {
+  clientEmail: string;
+  clientName: string;
+  workshopTitle: string;
+  startsAt: Date;
+  format: "in_person" | "online";
+  location: string | null;
+  manageToken: string;
+  locale?: string;
+};
+
+export async function sendWorkshopRegistrationConfirmationEmail(registration: WorkshopRegistrationForEmail) {
+  await renderAndSend(
+    "workshop_registration_confirmation",
+    registration.clientEmail,
+    {
+      clientName: escapeHtml(registration.clientName),
+      workshopTitle: escapeHtml(registration.workshopTitle),
+      workshopDateTime: escapeHtml(formatLocalDateTime(registration.startsAt)),
+      formatLabel: registration.format === "in_person" ? "in person" : "online",
+      location: registration.location ? escapeHtml(registration.location) : "",
+      manageUrl: `${siteUrl}/manage/workshop/${registration.manageToken}`,
+    },
+    undefined,
+    registration.locale,
+  );
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
