@@ -6,6 +6,7 @@ import {
   type PackageSaleRow,
   type GiftCodeSaleRow,
   type WorkshopRegistrationRevenueRow,
+  type DigitalResourcePurchaseRevenueRow,
 } from "@/lib/finance-export";
 
 function revenueRow(overrides: Partial<RevenueRow> = {}): RevenueRow {
@@ -63,6 +64,18 @@ function workshopRow(overrides: Partial<WorkshopRegistrationRevenueRow> = {}): W
     workshopTitle: "Intro to Mindful Intimacy",
     clientName: "Robin Client",
     amountCents: 4500,
+    currency: "EUR",
+    ...overrides,
+  };
+}
+
+function digitalResourceRow(overrides: Partial<DigitalResourcePurchaseRevenueRow> = {}): DigitalResourcePurchaseRevenueRow {
+  return {
+    date: "2026-06-07",
+    reference: "purch_abc123",
+    resourceTitle: "Intimacy Workbook",
+    clientName: "Taylor Client",
+    amountCents: 1500,
     currency: "EUR",
     ...overrides,
   };
@@ -170,5 +183,26 @@ describe("buildFinancialReportCsv", () => {
     );
     const dates = csv.split("\r\n").slice(1).map((line) => line.split(",")[0]);
     expect(dates).toEqual(["2026-06-01", "2026-06-05", "2026-06-10", "2026-06-15", "2026-06-20"]);
+  });
+
+  it("renders a digital resource purchase as a positive revenue row", () => {
+    const csv = buildFinancialReportCsv([], [], [], [], [], [digitalResourceRow()]);
+    const [, row] = csv.split("\r\n");
+    expect(row).toBe(
+      "2026-06-07,Revenue,Digital resource: Intimacy Workbook — Taylor Client,purch_abc123,15.00,EUR",
+    );
+  });
+
+  it("sorts digital resource purchases alongside everything else", () => {
+    const csv = buildFinancialReportCsv(
+      [revenueRow({ date: "2026-06-15" })],
+      [expenseRow({ date: "2026-06-20" })],
+      [packageSaleRow({ date: "2026-06-10" })],
+      [giftCodeSaleRow({ date: "2026-06-05" })],
+      [workshopRow({ date: "2026-06-08" })],
+      [digitalResourceRow({ date: "2026-06-01" })],
+    );
+    const dates = csv.split("\r\n").slice(1).map((line) => line.split(",")[0]);
+    expect(dates).toEqual(["2026-06-01", "2026-06-05", "2026-06-08", "2026-06-10", "2026-06-15", "2026-06-20"]);
   });
 });

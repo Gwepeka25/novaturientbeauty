@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { href: "/admin/packages", label: "Packages" },
   { href: "/admin/gift-codes", label: "Gift codes" },
   { href: "/admin/workshops", label: "Workshops" },
+  { href: "/admin/digital-resources", label: "Digital resources" },
   { href: "/admin/availability", label: "Availability" },
   { href: "/admin/services", label: "Services & fees" },
   { href: "/admin/reviews", label: "Reviews" },

@@ -22,7 +22,8 @@ export type EmailTemplateKey =
   | "waitlist_joined"
   | "waitlist_slot_available"
   | "reengagement"
-  | "workshop_registration_confirmation";
+  | "workshop_registration_confirmation"
+  | "digital_resource_download_ready";
 
 export const EMAIL_TEMPLATE_KEYS: EmailTemplateKey[] = [
   "booking_confirmation",
@@ -35,6 +36,7 @@ export const EMAIL_TEMPLATE_KEYS: EmailTemplateKey[] = [
   "waitlist_slot_available",
   "reengagement",
   "workshop_registration_confirmation",
+  "digital_resource_download_ready",
 ];
 
 export type EmailTemplate = { subject: string; bodyHtml: string };
@@ -188,6 +190,17 @@ export const EMAIL_TEMPLATE_DEFAULTS: Record<EmailTemplateKey, EmailTemplateDefa
 <p>See you there.</p>
 <p>— {{brandName}}</p>`,
   },
+  digital_resource_download_ready: {
+    label: "Digital resource — download ready",
+    description: "Sent once payment for a digital resource is confirmed, with the download link.",
+    variables: ["clientName", "resourceTitle", "downloadUrl"],
+    subject: "Your download is ready — {{resourceTitle}}",
+    bodyHtml: `<p>Hi {{clientName}},</p>
+<p>Thanks for your purchase. Your download is ready:</p>
+<p><a href="{{downloadUrl}}">{{downloadUrl}}</a></p>
+<p>This link stays active for 30 days.</p>
+<p>— {{brandName}}</p>`,
+  },
 };
 
 // French/Dutch subject+body for the client-facing templates. Deliberately
@@ -277,6 +290,14 @@ export const EMAIL_TEMPLATE_DEFAULTS_FR: Partial<Record<EmailTemplateKey, EmailT
 <p>À bientôt.</p>
 <p>— {{brandName}}</p>`,
   },
+  digital_resource_download_ready: {
+    subject: "Votre téléchargement est prêt — {{resourceTitle}}",
+    bodyHtml: `<p>Bonjour {{clientName}},</p>
+<p>Merci pour votre achat. Votre téléchargement est prêt :</p>
+<p><a href="{{downloadUrl}}">{{downloadUrl}}</a></p>
+<p>Ce lien reste actif pendant 30 jours.</p>
+<p>— {{brandName}}</p>`,
+  },
 };
 
 export const EMAIL_TEMPLATE_DEFAULTS_NL: Partial<Record<EmailTemplateKey, EmailTemplate>> = {
@@ -358,6 +379,14 @@ export const EMAIL_TEMPLATE_DEFAULTS_NL: Partial<Record<EmailTemplateKey, EmailT
 <p>{{location}}</p>
 <p>Je kan je plek hier annuleren als dat nodig is: <a href="{{manageUrl}}">{{manageUrl}}</a></p>
 <p>Tot dan.</p>
+<p>— {{brandName}}</p>`,
+  },
+  digital_resource_download_ready: {
+    subject: "Je download is klaar — {{resourceTitle}}",
+    bodyHtml: `<p>Hoi {{clientName}},</p>
+<p>Bedankt voor je aankoop. Je download is klaar:</p>
+<p><a href="{{downloadUrl}}">{{downloadUrl}}</a></p>
+<p>Deze link blijft 30 dagen actief.</p>
 <p>— {{brandName}}</p>`,
   },
 };

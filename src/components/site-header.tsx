@@ -20,6 +20,7 @@ export function SiteHeader({ locale }: { locale: Locale }) {
     { href: "/about", label: t(locale, "nav_about") },
     { href: "/sessions", label: t(locale, "nav_sessions") },
     { href: "/workshops", label: t(locale, "nav_workshops") },
+    { href: "/resources", label: t(locale, "nav_resources") },
     { href: "/reviews", label: t(locale, "nav_reviews") },
     { href: "/contact", label: t(locale, "nav_contact") },
   ];

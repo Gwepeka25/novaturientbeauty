@@ -41,3 +41,13 @@ export const workshopRegistrationRequestSchema = z.object({
 });
 
 export type WorkshopRegistrationRequest = z.infer<typeof workshopRegistrationRequestSchema>;
+
+export const digitalResourcePurchaseRequestSchema = z.object({
+  resourceId: z.string().min(1),
+  clientName: z.string().trim().min(1).max(120),
+  clientEmail: z.string().trim().email().max(200),
+  payOnline: z.boolean().optional(),
+  website: z.string().max(0).optional().or(z.literal("")),
+});
+
+export type DigitalResourcePurchaseRequest = z.infer<typeof digitalResourcePurchaseRequestSchema>;

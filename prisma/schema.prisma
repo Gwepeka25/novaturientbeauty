@@ -337,6 +337,49 @@ model WorkshopRegistration {
   @@index([clientEmail])
 }
 
+// A downloadable file sold for a fixed price — stored directly in Postgres
+// (bytea) rather than on disk or an object store, since this app runs on
+// Render's ephemeral filesystem with no bucket configured. Fine for the
+// PDF/e-book-sized files this is meant for; the admin upload form caps the
+// size accordingly. Cash purchases are admin-released (see
+// DigitalResourcePurchase); online ones release themselves once Stripe
+// confirms payment.
+model DigitalResource {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  priceCents    Int
+  currency      String   @default("EUR")
+  fileName      String
+  fileMimeType  String
+  fileData      Bytes
+  fileSizeBytes Int
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  purchases DigitalResourcePurchase[]
+}
+
+model DigitalResourcePurchase {
+  id             String    @id @default(cuid())
+  resourceId     String
+  resource       DigitalResource @relation(fields: [resourceId], references: [id])
+  clientName     String
+  clientEmail    String
+  locale         String    @default("en")
+  purchasedAt    DateTime  @default(now())
+  cashPaid       Boolean   @default(false) // admin marks this once paid in cash/bank transfer, which releases the download
+  paidOnlineAt   DateTime?
+  stripeCheckoutSessionId String? @unique
+  downloadToken  String    @unique
+  downloadTokenExp DateTime
+  downloadCount  Int       @default(0)
+
+  @@index([resourceId])
+  @@index([clientEmail])
+}
+
 model AuditEvent {
   id            String   @id @default(cuid())
   actorId       String?

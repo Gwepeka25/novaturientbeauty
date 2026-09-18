@@ -68,6 +68,20 @@ export type WorkshopRegistrationRevenueRow = {
   currency: string;
 };
 
+// A digital resource purchase only becomes revenue once it's actually paid
+// (cashPaid or paidOnlineAt) — unlike packages/gift codes/workshops, the
+// purchase row here is created before payment is confirmed (see
+// src/lib/digital-resources.ts), so an unpaid request must never appear as
+// revenue.
+export type DigitalResourcePurchaseRevenueRow = {
+  date: string; // "YYYY-MM-DD"
+  reference: string;
+  resourceTitle: string;
+  clientName: string;
+  amountCents: number;
+  currency: string;
+};
+
 const CSV_HEADER = ["Date", "Type", "Description", "Reference", "Amount", "Currency"];
 
 export function buildFinancialReportCsv(
@@ -76,6 +90,7 @@ export function buildFinancialReportCsv(
   packageSales: PackageSaleRow[] = [],
   giftCodeSales: GiftCodeSaleRow[] = [],
   workshopRegistrations: WorkshopRegistrationRevenueRow[] = [],
+  digitalResourcePurchases: DigitalResourcePurchaseRevenueRow[] = [],
 ): string {
   const lines: string[][] = [CSV_HEADER];
 
@@ -111,6 +126,14 @@ export function buildFinancialReportCsv(
       reference: w.reference,
       amountCents: w.amountCents,
       currency: w.currency,
+    })),
+    ...digitalResourcePurchases.map((d) => ({
+      date: d.date,
+      type: "Revenue" as const,
+      description: `Digital resource: ${d.resourceTitle} — ${d.clientName}`,
+      reference: d.reference,
+      amountCents: d.amountCents,
+      currency: d.currency,
     })),
     ...expenses.map((e) => ({
       date: e.date,
@@ -208,6 +231,27 @@ export async function getWorkshopRegistrationRevenueRowsForExport(
     clientName: r.clientName,
     amountCents: r.workshop.priceCents,
     currency: r.workshop.currency,
+  }));
+}
+
+export async function getDigitalResourcePurchaseRevenueRowsForExport(
+  range: { from: Date; to: Date },
+): Promise<DigitalResourcePurchaseRevenueRow[]> {
+  const rows = await prisma.digitalResourcePurchase.findMany({
+    where: {
+      purchasedAt: { gte: range.from, lte: range.to },
+      OR: [{ cashPaid: true }, { paidOnlineAt: { not: null } }],
+    },
+    include: { resource: true },
+    orderBy: { purchasedAt: "asc" },
+  });
+  return rows.map((p) => ({
+    date: utcToLocalDateISO(p.purchasedAt),
+    reference: p.id,
+    resourceTitle: p.resource.title,
+    clientName: p.clientName,
+    amountCents: p.resource.priceCents,
+    currency: p.resource.currency,
   }));
 }
 

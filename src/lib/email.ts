@@ -259,6 +259,28 @@ type WorkshopRegistrationForEmail = {
   locale?: string;
 };
 
+type DigitalResourcePurchaseForEmail = {
+  clientEmail: string;
+  clientName: string;
+  resourceTitle: string;
+  downloadToken: string;
+  locale?: string;
+};
+
+export async function sendDigitalResourceDownloadReadyEmail(purchase: DigitalResourcePurchaseForEmail) {
+  await renderAndSend(
+    "digital_resource_download_ready",
+    purchase.clientEmail,
+    {
+      clientName: escapeHtml(purchase.clientName),
+      resourceTitle: escapeHtml(purchase.resourceTitle),
+      downloadUrl: `${siteUrl}/api/resources/download/${purchase.downloadToken}`,
+    },
+    undefined,
+    purchase.locale,
+  );
+}
+
 export async function sendWorkshopRegistrationConfirmationEmail(registration: WorkshopRegistrationForEmail) {
   await renderAndSend(
     "workshop_registration_confirmation",
