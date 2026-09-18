@@ -68,16 +68,21 @@ export default async function AdminFinancesPage({
         you log below — there&rsquo;s no bank connection.
       </p>
 
-      <div className="admin-row" style={{ marginBottom: 20 }}>
-        {REPORT_RANGE_PRESETS.map((p) => (
-          <Link
-            key={p}
-            href={`/admin/finances?range=${p}`}
-            className={`admin-btn ${p === preset ? "" : "admin-btn-outline"}`}
-          >
-            {reportRangeLabel(p)}
-          </Link>
-        ))}
+      <div className="admin-row" style={{ marginBottom: 20, justifyContent: "space-between" }}>
+        <div className="admin-row">
+          {REPORT_RANGE_PRESETS.map((p) => (
+            <Link
+              key={p}
+              href={`/admin/finances?range=${p}`}
+              className={`admin-btn ${p === preset ? "" : "admin-btn-outline"}`}
+            >
+              {reportRangeLabel(p)}
+            </Link>
+          ))}
+        </div>
+        <a className="admin-btn admin-btn-outline" href={`/api/admin/finances/export?range=${preset}`}>
+          Export CSV
+        </a>
       </div>
 
       <div className="admin-grid" style={{ marginBottom: 24 }}>
