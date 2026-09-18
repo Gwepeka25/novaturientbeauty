@@ -180,6 +180,16 @@ function generatePublicCode(): string {
   return `NB-${code}`;
 }
 
+/** Idempotent: a webhook retry or a race with the Stripe return page should never double-apply this. */
+export async function markAppointmentPaidOnline(appointmentId: string, stripeCheckoutSessionId: string) {
+  const appointment = await prisma.appointment.findUnique({ where: { id: appointmentId } });
+  if (!appointment || appointment.paidOnlineAt) return;
+  await prisma.appointment.update({
+    where: { id: appointmentId },
+    data: { paidOnlineAt: nowUtc(), stripeCheckoutSessionId },
+  });
+}
+
 export type AppointmentStatus =
   | "pending"
   | "confirmed"

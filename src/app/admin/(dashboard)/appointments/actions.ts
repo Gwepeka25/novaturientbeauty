@@ -51,6 +51,7 @@ export async function updateAppointmentStatus(appointmentId: string, status: str
         locale: appointment.locale,
         coveredByPackage: !!appointment.packageId,
         coveredByGiftCode: !!appointment.giftCodeId,
+        paidOnline: !!appointment.paidOnlineAt,
       }).catch((error) => {
         console.error("Failed to send receipt email:", error);
       });

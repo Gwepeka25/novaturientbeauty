@@ -4,6 +4,7 @@ import { todayLocalISO, addDaysLocalISO } from "@/lib/timezone";
 import { BookingWizard } from "@/components/booking-wizard";
 import { getLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
+import { isStripeConfigured } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,7 @@ export default async function BookPage() {
         }))}
         minDate={today}
         maxDate={maxDate}
+        stripeEnabled={isStripeConfigured()}
       />
     </section>
   );

@@ -9,6 +9,7 @@ export const bookingRequestSchema = z.object({
   clientPhone: z.string().trim().max(40).optional().or(z.literal("")),
   clientNote: z.string().trim().max(600).optional().or(z.literal("")),
   giftCode: z.string().trim().max(40).optional().or(z.literal("")),
+  payOnline: z.boolean().optional(),
   // Honeypot: real users never see or fill this field (hidden via CSS).
   // Any non-empty value strongly suggests an automated submission.
   website: z.string().max(0).optional().or(z.literal("")),

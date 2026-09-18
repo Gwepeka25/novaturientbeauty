@@ -106,6 +106,7 @@ type CompletedAppointmentForReceipt = {
   locale?: string;
   coveredByPackage?: boolean;
   coveredByGiftCode?: boolean;
+  paidOnline?: boolean;
 };
 
 // Sent automatically once a session is marked completed, so the client has
@@ -126,9 +127,11 @@ export async function sendReceiptEmail(appointment: CompletedAppointmentForRecei
         ? "Session package"
         : appointment.coveredByGiftCode
           ? "Gift code"
-          : appointment.cashPaid
-            ? "Cash"
-            : "Arranged privately",
+          : appointment.paidOnline
+            ? "Paid online"
+            : appointment.cashPaid
+              ? "Cash"
+              : "Arranged privately",
       amount:
         appointment.coveredByPackage || appointment.coveredByGiftCode
           ? `Covered by your ${appointment.coveredByPackage ? "session package" : "gift code"}`

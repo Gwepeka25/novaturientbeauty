@@ -111,6 +111,8 @@ model Appointment {
                              // portal — never clinical, the client's choice
                              // to read it
   cashPaid         Boolean  @default(false)
+  paidOnlineAt     DateTime? // set once a Stripe checkout for this appointment is confirmed paid
+  stripeCheckoutSessionId String? @unique
   onlineMeetingUrl String? // only set/sent after confirmation
   manageToken      String   @unique // secure token for reschedule/cancel links
   manageTokenExp   DateTime

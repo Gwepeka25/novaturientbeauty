@@ -69,11 +69,13 @@ export function BookingWizard({
   services,
   minDate,
   maxDate,
+  stripeEnabled = false,
 }: {
   locale: Locale;
   services: Service[];
   minDate: string;
   maxDate: string;
+  stripeEnabled?: boolean;
 }) {
   const STEP_LABELS: Record<Step, string> = {
     format: t(locale, "book_step_format"),
@@ -223,7 +225,7 @@ export function BookingWizard({
     void loadSlots(dateISO, nextFormat);
   }
 
-  async function handleSubmit() {
+  async function handleSubmit(payOnline: boolean) {
     if (!service || !format || !selectedSlot) return;
     setSubmitting(true);
     setError(null);
@@ -240,12 +242,18 @@ export function BookingWizard({
           clientPhone,
           clientNote,
           giftCode,
+          payOnline,
           website,
         }),
       });
       const json = await res.json();
       if (!res.ok) {
         setError(json.error ?? "Something went wrong. Please try again.");
+        return;
+      }
+      if (json.checkoutUrl) {
+        clearDraft();
+        window.location.href = json.checkoutUrl;
         return;
       }
       setConfirmation(json);
@@ -658,8 +666,20 @@ export function BookingWizard({
             <button type="button" className="button button-outline" onClick={() => setStep("details")}>
               {t(locale, "common_back")}
             </button>
-            <button type="button" className="button" onClick={handleSubmit} disabled={submitting}>
-              {submitting ? t(locale, "book_confirming") : t(locale, "book_confirm")}
+            {stripeEnabled && (
+              <button
+                type="button"
+                className="button button-outline"
+                onClick={() => handleSubmit(true)}
+                disabled={submitting}
+              >
+                {submitting ? t(locale, "book_confirming") : t(locale, "book_pay_online")}
+              </button>
+            )}
+            <button type="button" className="button" onClick={() => handleSubmit(false)} disabled={submitting}>
+              {submitting
+                ? t(locale, "book_confirming")
+                : t(locale, stripeEnabled ? "book_confirm_cash" : "book_confirm")}
             </button>
           </div>
         </div>

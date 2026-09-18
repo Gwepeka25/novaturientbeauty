@@ -93,7 +93,9 @@ export default async function AdminAppointmentsPage({
                 <td>{a.service.name}</td>
                 <td>{a.format === "in_person" ? "In person" : "Online"}</td>
                 <td>
-                  {a.format === "in_person" ? (
+                  {a.paidOnlineAt ? (
+                    <span title={a.paidOnlineAt.toISOString()}>Paid online</span>
+                  ) : a.format === "in_person" ? (
                     <CashToggle appointmentId={a.id} cashPaid={a.cashPaid} />
                   ) : (
                     <span style={{ color: "var(--muted)" }}>—</span>

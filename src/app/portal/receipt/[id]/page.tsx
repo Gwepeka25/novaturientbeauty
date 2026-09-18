@@ -85,9 +85,11 @@ export default async function ReceiptPage({
                 ? "Session package"
                 : appointment.giftCodeId
                   ? "Gift code"
-                  : appointment.cashPaid
-                    ? "Cash"
-                    : "Arranged privately"}
+                  : appointment.paidOnlineAt
+                    ? "Paid online"
+                    : appointment.cashPaid
+                      ? "Cash"
+                      : "Arranged privately"}
             </dd>
           </div>
           <div className="receipt-total">

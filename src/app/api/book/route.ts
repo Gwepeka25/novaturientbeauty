@@ -6,6 +6,9 @@ import { rateLimit } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { formatLocalDateTime } from "@/lib/timezone";
 import { getRequestLocale } from "@/lib/locale-request";
+import { isStripeConfigured, createCheckoutSession } from "@/lib/stripe";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 function getClientIp(request: NextRequest): string {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
@@ -88,10 +91,35 @@ export async function POST(request: NextRequest) {
       console.error("Failed to send admin booking notification:", error);
     }
 
+    // Pay-online is only offered when there's actually something to charge —
+    // a gift code or package may already have covered the appointment in
+    // full, in which case there's nothing for Stripe to do.
+    let checkoutUrl: string | undefined;
+    if (data.payOnline && isStripeConfigured() && (appointment.priceCentsAtBooking ?? 0) > 0) {
+      try {
+        const checkout = await createCheckoutSession({
+          amountCents: appointment.priceCentsAtBooking ?? service.priceCents,
+          currency: service.currency,
+          description: `${service.name} — ${formatLocalDateTime(appointment.startsAt)}`,
+          successUrl: `${siteUrl}/book/confirmed/${appointment.id}?session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: `${siteUrl}/book?paymentCancelled=1`,
+          customerEmail: appointment.clientEmail,
+          metadata: { kind: "appointment", appointmentId: appointment.id },
+        });
+        checkoutUrl = checkout.url;
+      } catch (error) {
+        // The appointment already exists and is confirmed (same as any
+        // cash booking) — a Stripe outage shouldn't undo that. The client
+        // simply falls back to paying in person.
+        console.error("Failed to create Stripe checkout session:", error);
+      }
+    }
+
     return NextResponse.json({
       publicCode: appointment.publicCode,
       startsAtLabel: formatLocalDateTime(appointment.startsAt),
       manageToken: appointment.manageToken,
+      checkoutUrl,
     });
   } catch (error) {
     if (error instanceof SlotUnavailableError) {
