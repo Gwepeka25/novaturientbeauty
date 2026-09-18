@@ -58,9 +58,9 @@ export function BookingWizard({
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [confirmation, setConfirmation] = useState<{ publicCode: string; startsAtLabel: string } | null>(
-    null,
-  );
+  const [confirmation, setConfirmation] = useState<
+    { publicCode: string; startsAtLabel: string; manageToken?: string } | null
+  >(null);
 
   const [waitlistOpen, setWaitlistOpen] = useState(false);
   const [waitlistName, setWaitlistName] = useState("");
@@ -185,9 +185,16 @@ export function BookingWizard({
           <strong>{confirmation.publicCode}</strong>.
         </p>
         <p>{t(locale, "book_success_body")}</p>
-        <Link className="button" href="/">
-          {t(locale, "book_success_home")}
-        </Link>
+        <div className="step-actions" style={{ justifyContent: "flex-start" }}>
+          {confirmation.manageToken && (
+            <a className="button button-outline" href={`/api/manage/${confirmation.manageToken}/ics`}>
+              {t(locale, "book_success_add_to_calendar")}
+            </a>
+          )}
+          <Link className="button" href="/">
+            {t(locale, "book_success_home")}
+          </Link>
+        </div>
       </div>
     );
   }

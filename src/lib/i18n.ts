@@ -166,6 +166,7 @@ const en = {
   book_success_timezone: "Brussels time",
   book_success_reference: "Reference",
   book_success_body: "We’ve sent a confirmation to your email with a private link to reschedule or cancel if you need to.",
+  book_success_add_to_calendar: "Add to calendar",
   book_success_home: "Back to home",
 } as const;
 
@@ -323,6 +324,7 @@ const fr: Record<I18nKey, string> = {
   book_success_timezone: "heure de Bruxelles",
   book_success_reference: "Référence",
   book_success_body: "Nous vous avons envoyé une confirmation par email avec un lien privé pour reprogrammer ou annuler si besoin.",
+  book_success_add_to_calendar: "Ajouter à mon calendrier",
   book_success_home: "Retour à l’accueil",
 };
 
@@ -478,6 +480,7 @@ const nl: Record<I18nKey, string> = {
   book_success_timezone: "Brusselse tijd",
   book_success_reference: "Referentie",
   book_success_body: "We hebben een bevestiging naar je e-mail gestuurd met een privé link om te verplaatsen of te annuleren indien nodig.",
+  book_success_add_to_calendar: "Toevoegen aan agenda",
   book_success_home: "Terug naar home",
 };
 

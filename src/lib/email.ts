@@ -1,10 +1,10 @@
 import { Resend } from "resend";
-import { createEvent } from "ics";
 import { formatLocalDateTime, formatLocalDateLabel } from "@/lib/timezone";
 import { formatFeeCents } from "@/lib/services-data";
-import { BRAND_NAME, PRACTITIONER_NAME, PRACTITIONER_FULL } from "@/lib/site-config";
+import { BRAND_NAME, PRACTITIONER_FULL } from "@/lib/site-config";
 import { getEmailTemplate } from "@/lib/email-templates";
 import { renderEmailTemplate, type EmailTemplateKey } from "@/lib/email-template-defaults";
+import { buildAppointmentIcs } from "@/lib/ics";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 const emailFrom = process.env.EMAIL_FROM ?? "no-reply@example.com";
@@ -61,7 +61,7 @@ type AppointmentForEmail = {
 
 export async function sendBookingConfirmationEmail(appointment: AppointmentForEmail) {
   const manageUrl = `${siteUrl}/manage/${appointment.manageToken}`;
-  const ics = buildIcs(appointment);
+  const ics = buildAppointmentIcs(appointment);
   await renderAndSend(
     "booking_confirmation",
     appointment.clientEmail,
@@ -74,36 +74,6 @@ export async function sendBookingConfirmationEmail(appointment: AppointmentForEm
     ics ? [{ filename: "appointment.ics", content: Buffer.from(ics).toString("base64") }] : undefined,
     appointment.locale,
   );
-}
-
-function buildIcs(appointment: AppointmentForEmail): string | null {
-  const start = appointment.startsAt;
-  const end = appointment.endsAt;
-  const { error, value } = createEvent({
-    title: `Appointment — ${PRACTITIONER_NAME}`, // neutral, no service/type revealed
-    start: [
-      start.getUTCFullYear(),
-      start.getUTCMonth() + 1,
-      start.getUTCDate(),
-      start.getUTCHours(),
-      start.getUTCMinutes(),
-    ],
-    startInputType: "utc",
-    end: [
-      end.getUTCFullYear(),
-      end.getUTCMonth() + 1,
-      end.getUTCDate(),
-      end.getUTCHours(),
-      end.getUTCMinutes(),
-    ],
-    endInputType: "utc",
-    uid: `${appointment.publicCode}@novaturientbeauty`,
-  });
-  if (error || !value) {
-    console.error("Failed to build .ics file:", error);
-    return null;
-  }
-  return value;
 }
 
 export async function sendAppointmentReminderEmail(appointment: AppointmentForEmail) {

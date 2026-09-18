@@ -133,6 +133,9 @@ export function ManageAppointment({ token }: { token: string }) {
 
       {canAct && mode === "view" && (
         <div className="step-actions" style={{ justifyContent: "flex-start" }}>
+          <a className="button button-outline" href={`/api/manage/${token}/ics`}>
+            Add to calendar
+          </a>
           <button type="button" className="button button-outline" onClick={() => setMode("reschedule")}>
             Reschedule
           </button>

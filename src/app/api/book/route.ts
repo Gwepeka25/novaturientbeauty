@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       publicCode: appointment.publicCode,
       startsAtLabel: formatLocalDateTime(appointment.startsAt),
+      manageToken: appointment.manageToken,
     });
   } catch (error) {
     if (error instanceof SlotUnavailableError) {
