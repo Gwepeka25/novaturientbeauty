@@ -52,6 +52,11 @@ export function formatLocalDateTime(date: Date): string {
     .toFormat("cccc d LLLL yyyy 'at' HH:mm");
 }
 
+export function formatLocalDateLabel(dateISO: string): string {
+  const [year, month, day] = dateISO.split("-").map(Number);
+  return DateTime.fromObject({ year, month, day }, { zone: TIMEZONE }).toFormat("cccc d LLLL yyyy");
+}
+
 export function addDaysLocalISO(dateISO: string, days: number): string {
   const [year, month, day] = dateISO.split("-").map(Number);
   return DateTime.fromObject({ year, month, day }, { zone: TIMEZONE })

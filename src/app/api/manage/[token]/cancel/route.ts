@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { nowUtc, minutesBetween } from "@/lib/timezone";
+import { nowUtc, minutesBetween, utcToLocalDateISO } from "@/lib/timezone";
 import { rateLimit } from "@/lib/rate-limit";
+import { notifyWaitlistForOpening } from "@/lib/waitlist";
 
 export async function POST(
   request: NextRequest,
@@ -41,6 +42,18 @@ export async function POST(
       },
     }),
   ]);
+
+  // Best-effort: a waitlist notification failing should never make an
+  // otherwise-successful cancellation look like it failed to the client.
+  try {
+    await notifyWaitlistForOpening({
+      serviceId: appointment.serviceId,
+      format: appointment.format as "in_person" | "online",
+      date: utcToLocalDateISO(appointment.startsAt),
+    });
+  } catch (error) {
+    console.error("Failed to notify waitlist after cancellation:", error);
+  }
 
   return NextResponse.json({ ok: true, isLate });
 }

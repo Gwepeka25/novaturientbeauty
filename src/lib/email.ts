@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 import { createEvent } from "ics";
-import { formatLocalDateTime } from "@/lib/timezone";
+import { formatLocalDateTime, formatLocalDateLabel } from "@/lib/timezone";
 import { BRAND_NAME, PRACTITIONER_NAME } from "@/lib/site-config";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -150,6 +150,36 @@ export async function sendReviewInviteEmail(
     <p>— ${escapeHtml(BRAND_NAME)}</p>
   `;
   await sendEmail(clientEmail, "A quick follow-up", html);
+}
+
+type WaitlistNotice = {
+  clientEmail: string;
+  clientName: string;
+  serviceName: string;
+  date: string; // "YYYY-MM-DD"
+  format: "in_person" | "online";
+};
+
+export async function sendWaitlistJoinedEmail(entry: WaitlistNotice) {
+  const bookUrl = `${siteUrl}/book`;
+  const html = `
+    <p>Hi ${escapeHtml(entry.clientName)},</p>
+    <p>You're on the waitlist for ${escapeHtml(entry.serviceName)} (${entry.format === "in_person" ? "in person" : "online"}) on ${escapeHtml(formatLocalDateLabel(entry.date))}. If a time opens up on that date, we'll email you straight away so you can book it.</p>
+    <p>In the meantime, you're welcome to book any other available date here: <a href="${bookUrl}">${bookUrl}</a></p>
+    <p>— ${escapeHtml(BRAND_NAME)}</p>
+  `;
+  await sendEmail(entry.clientEmail, "You're on the waitlist", html);
+}
+
+export async function sendWaitlistSlotAvailableEmail(entry: WaitlistNotice) {
+  const bookUrl = `${siteUrl}/book`;
+  const html = `
+    <p>Hi ${escapeHtml(entry.clientName)},</p>
+    <p>Good news — a time just opened up for ${escapeHtml(entry.serviceName)} (${entry.format === "in_person" ? "in person" : "online"}) on ${escapeHtml(formatLocalDateLabel(entry.date))}.</p>
+    <p>Slots are first-come, first-served, so it's worth booking soon: <a href="${bookUrl}">${bookUrl}</a></p>
+    <p>— ${escapeHtml(BRAND_NAME)}</p>
+  `;
+  await sendEmail(entry.clientEmail, "A time just opened up", html);
 }
 
 export async function sendClientPortalLinkEmail(email: string, portalUrl: string) {

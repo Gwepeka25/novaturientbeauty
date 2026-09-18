@@ -62,6 +62,14 @@ export function BookingWizard({
     null,
   );
 
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
+  const [waitlistName, setWaitlistName] = useState("");
+  const [waitlistEmail, setWaitlistEmail] = useState("");
+  const [waitlistPhone, setWaitlistPhone] = useState("");
+  const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
+  const [waitlistError, setWaitlistError] = useState<string | null>(null);
+  const [waitlistDone, setWaitlistDone] = useState(false);
+
   const service = useMemo(() => services.find((s) => s.id === serviceId) ?? null, [services, serviceId]);
   const availableServices = useMemo(
     () => services.filter((s) => s.format === "both" || s.format === format),
@@ -133,6 +141,37 @@ export function BookingWizard({
       setError("Something went wrong. Please check your connection and try again.");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleWaitlistJoin() {
+    if (!service || !format || !dateISO) return;
+    setWaitlistSubmitting(true);
+    setWaitlistError(null);
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          serviceId: service.id,
+          format,
+          date: dateISO,
+          clientName: waitlistName,
+          clientEmail: waitlistEmail,
+          clientPhone: waitlistPhone,
+          website,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setWaitlistError(json.error ?? t(locale, "book_waitlist_error"));
+        return;
+      }
+      setWaitlistDone(true);
+    } catch {
+      setWaitlistError(t(locale, "book_waitlist_error"));
+    } finally {
+      setWaitlistSubmitting(false);
     }
   }
 
@@ -251,6 +290,9 @@ export function BookingWizard({
                 className={`date-chip ${dateISO === d.iso ? "is-selected" : ""}`}
                 onClick={() => {
                   setDateISO(d.iso);
+                  setWaitlistOpen(false);
+                  setWaitlistDone(false);
+                  setWaitlistError(null);
                   void loadSlots(d.iso, format);
                 }}
               >
@@ -272,6 +314,66 @@ export function BookingWizard({
                       {t(locale, format === "in_person" ? "book_alt_available_online" : "book_alt_available_in_person")}{" "}
                       <button type="button" className="link-button" onClick={switchFormat}>
                         {t(locale, format === "in_person" ? "book_switch_to_online" : "book_switch_to_in_person")}
+                      </button>
+                    </p>
+                  )}
+
+                  {waitlistDone ? (
+                    <p>{t(locale, "book_waitlist_success")}</p>
+                  ) : waitlistOpen ? (
+                    <div className="waitlist-form">
+                      <h3 className="serif">{t(locale, "book_waitlist_heading")}</h3>
+                      <div className="form-field">
+                        <label htmlFor="waitlistName">{t(locale, "book_label_name")}</label>
+                        <input
+                          id="waitlistName"
+                          type="text"
+                          required
+                          value={waitlistName}
+                          onChange={(e) => setWaitlistName(e.target.value)}
+                          autoComplete="name"
+                        />
+                      </div>
+                      <div className="form-field">
+                        <label htmlFor="waitlistEmail">{t(locale, "book_label_email")}</label>
+                        <input
+                          id="waitlistEmail"
+                          type="email"
+                          required
+                          value={waitlistEmail}
+                          onChange={(e) => setWaitlistEmail(e.target.value)}
+                          autoComplete="email"
+                        />
+                      </div>
+                      <div className="form-field">
+                        <label htmlFor="waitlistPhone">{t(locale, "book_label_phone")}</label>
+                        <input
+                          id="waitlistPhone"
+                          type="tel"
+                          value={waitlistPhone}
+                          onChange={(e) => setWaitlistPhone(e.target.value)}
+                          autoComplete="tel"
+                        />
+                      </div>
+                      {waitlistError && <p className="form-error">{waitlistError}</p>}
+                      <div className="step-actions">
+                        <button type="button" className="button button-outline" onClick={() => setWaitlistOpen(false)}>
+                          {t(locale, "book_waitlist_cancel")}
+                        </button>
+                        <button
+                          type="button"
+                          className="button"
+                          disabled={waitlistSubmitting || !waitlistName.trim() || !waitlistEmail.trim()}
+                          onClick={handleWaitlistJoin}
+                        >
+                          {waitlistSubmitting ? t(locale, "book_waitlist_submitting") : t(locale, "book_waitlist_submit")}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p>
+                      <button type="button" className="link-button" onClick={() => setWaitlistOpen(true)}>
+                        {t(locale, "book_waitlist_button")}
                       </button>
                     </p>
                   )}

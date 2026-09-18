@@ -11,6 +11,7 @@ beforeEach(async () => {
   await prisma.reviewInvite.deleteMany();
   await prisma.auditEvent.deleteMany();
   await prisma.clientLoginToken.deleteMany();
+  await prisma.waitlistEntry.deleteMany();
   await prisma.appointment.deleteMany();
   await prisma.service.deleteMany();
 

@@ -41,7 +41,8 @@ model Service {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  appointments Appointment[]
+  appointments    Appointment[]
+  waitlistEntries WaitlistEntry[]
 }
 
 // Recurring weekly availability, e.g. "Tuesdays 09:00-17:00". One row per
@@ -181,6 +182,27 @@ model ClientLoginToken {
   createdAt DateTime  @default(now())
 
   @@index([email])
+}
+
+// A client asked to be told if a slot opens up on a date that had none
+// available. Created from the booking flow when a date/format search comes
+// back empty; resolved by notifyWaitlistForOpening() when a matching
+// appointment is cancelled.
+model WaitlistEntry {
+  id          String   @id @default(cuid())
+  serviceId   String
+  service     Service  @relation(fields: [serviceId], references: [id])
+  format      String // "in_person" | "online"
+  date        String // "YYYY-MM-DD" in Europe/Brussels local date
+  clientName  String
+  clientEmail String
+  clientPhone String?
+  note        String?
+  status      String   @default("pending") // pending|notified|cancelled
+  notifiedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([date, serviceId, format, status])
 }
 
 model AuditEvent {

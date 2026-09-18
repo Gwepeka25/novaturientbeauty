@@ -14,3 +14,17 @@ export const bookingRequestSchema = z.object({
 });
 
 export type BookingRequest = z.infer<typeof bookingRequestSchema>;
+
+export const waitlistRequestSchema = z.object({
+  serviceId: z.string().min(1),
+  format: z.enum(["in_person", "online"]),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  clientName: z.string().trim().min(1).max(120),
+  clientEmail: z.string().trim().email().max(200),
+  clientPhone: z.string().trim().max(40).optional().or(z.literal("")),
+  note: z.string().trim().max(600).optional().or(z.literal("")),
+  // Honeypot, same convention as the booking form.
+  website: z.string().max(0).optional().or(z.literal("")),
+});
+
+export type WaitlistRequest = z.infer<typeof waitlistRequestSchema>;

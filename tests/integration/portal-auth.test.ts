@@ -8,6 +8,7 @@ let serviceId: string;
 beforeEach(async () => {
   await prisma.clientLoginToken.deleteMany();
   await prisma.reviewInvite.deleteMany();
+  await prisma.waitlistEntry.deleteMany();
   await prisma.appointment.deleteMany();
   await prisma.service.deleteMany();
 

@@ -1,8 +1,9 @@
 import { nanoid } from "nanoid";
 import { prisma } from "@/lib/prisma";
 import { isSlotStillAvailable } from "@/lib/availability";
-import { nowUtc } from "@/lib/timezone";
+import { nowUtc, utcToLocalDateISO } from "@/lib/timezone";
 import { acquireBookingLock } from "@/lib/db-lock";
+import { notifyWaitlistForOpening } from "@/lib/waitlist";
 
 export class SlotUnavailableError extends Error {
   constructor() {
@@ -137,7 +138,7 @@ export async function setAppointmentStatus(
   status: AppointmentStatus,
   actorId?: string,
 ) {
-  return prisma.$transaction(async (tx) => {
+  const appointment = await prisma.$transaction(async (tx) => {
     const appointment = await tx.appointment.update({
       where: { id: appointmentId },
       data: { status },
@@ -152,6 +153,22 @@ export async function setAppointmentStatus(
     });
     return appointment;
   });
+
+  if (status === "cancelled_by_client" || status === "cancelled_by_practitioner") {
+    // Best-effort: a waitlist notification failing should never make an
+    // otherwise-successful status change look like it failed.
+    try {
+      await notifyWaitlistForOpening({
+        serviceId: appointment.serviceId,
+        format: appointment.format as "in_person" | "online",
+        date: utcToLocalDateISO(appointment.startsAt),
+      });
+    } catch (error) {
+      console.error("Failed to notify waitlist after cancellation:", error);
+    }
+  }
+
+  return appointment;
 }
 
 export function canManageAppointment(appointment: {

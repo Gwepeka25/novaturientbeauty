@@ -9,6 +9,7 @@ const TEST_DATE = addDaysLocalISO(todayLocalISO(), 14);
 
 beforeEach(async () => {
   await prisma.auditEvent.deleteMany();
+  await prisma.waitlistEntry.deleteMany();
   await prisma.appointment.deleteMany();
   await prisma.availabilityException.deleteMany();
   await prisma.availabilityRule.deleteMany();

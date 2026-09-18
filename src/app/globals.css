@@ -1109,6 +1109,16 @@ legend {
   margin-bottom: 8px;
 }
 
+.waitlist-form {
+  margin-top: 12px;
+  max-width: 420px;
+}
+
+.waitlist-form h3 {
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
 .link-button {
   background: none;
   border: none;
