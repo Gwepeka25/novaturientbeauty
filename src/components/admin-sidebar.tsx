@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: "/admin/services", label: "Services & fees" },
   { href: "/admin/reviews", label: "Reviews" },
   { href: "/admin/content", label: "Website content" },
+  { href: "/admin/email-templates", label: "Email templates" },
   { href: "/admin/settings", label: "Settings" },
 ];
 

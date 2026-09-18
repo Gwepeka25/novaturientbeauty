@@ -161,6 +161,20 @@ model WebsiteContent {
   @@unique([key, locale])
 }
 
+// Editable copy for outgoing transactional emails (see
+// src/lib/email-template-defaults.ts for the compiled-in default subject/
+// body per key, and available {{variable}} placeholders). Same
+// approve-to-publish pattern as WebsiteContent: an unapproved or missing row
+// falls back to the default, so a bad edit can never break outgoing mail.
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  key       String   @unique // e.g. "booking_confirmation"
+  subject   String
+  bodyHtml  String
+  approved  Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+}
+
 // Business expenses, entered manually by the admin — there is no bank
 // integration. Used purely for profit reporting in /admin/finances.
 model Expense {

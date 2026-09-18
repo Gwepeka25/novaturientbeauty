@@ -3,6 +3,8 @@ import { createEvent } from "ics";
 import { formatLocalDateTime, formatLocalDateLabel } from "@/lib/timezone";
 import { formatFeeCents } from "@/lib/services-data";
 import { BRAND_NAME, PRACTITIONER_NAME, PRACTITIONER_FULL } from "@/lib/site-config";
+import { getEmailTemplate } from "@/lib/email-templates";
+import { renderEmailTemplate, type EmailTemplateKey } from "@/lib/email-template-defaults";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 const emailFrom = process.env.EMAIL_FROM ?? "no-reply@example.com";
@@ -29,6 +31,23 @@ async function sendEmail(
   await client.emails.send({ from: emailFrom, to, subject, html, attachments });
 }
 
+// Every template gets this merged in automatically, so individual send*
+// functions below don't need to repeat it.
+function baseVars(): Record<string, string> {
+  return { brandName: escapeHtml(BRAND_NAME) };
+}
+
+async function renderAndSend(
+  key: EmailTemplateKey,
+  to: string,
+  vars: Record<string, string>,
+  attachments?: { filename: string; content: string }[],
+) {
+  const template = await getEmailTemplate(key);
+  const { subject, bodyHtml } = renderEmailTemplate(template, { ...baseVars(), ...vars });
+  await sendEmail(to, subject, bodyHtml, attachments);
+}
+
 type AppointmentForEmail = {
   publicCode: string;
   startsAt: Date;
@@ -40,21 +59,16 @@ type AppointmentForEmail = {
 
 export async function sendBookingConfirmationEmail(appointment: AppointmentForEmail) {
   const manageUrl = `${siteUrl}/manage/${appointment.manageToken}`;
-  const html = `
-    <p>Hi ${escapeHtml(appointment.clientName)},</p>
-    <p>Your appointment is confirmed for ${escapeHtml(formatLocalDateTime(appointment.startsAt))} (Brussels time).</p>
-    <p>Reference: ${escapeHtml(appointment.publicCode)}</p>
-    <p>You can view, reschedule or cancel your appointment here: <a href="${manageUrl}">${manageUrl}</a></p>
-    <p>Payment is by cash for in-person sessions. If your session is online, the meeting link and any payment arrangement will be confirmed here closer to your appointment.</p>
-    <p>See you soon.</p>
-    <p>— ${escapeHtml(BRAND_NAME)}</p>
-  `;
   const ics = buildIcs(appointment);
-  // Neutral subject line — no service/appointment type revealed.
-  await sendEmail(
+  await renderAndSend(
+    "booking_confirmation",
     appointment.clientEmail,
-    "Your appointment confirmation",
-    html,
+    {
+      clientName: escapeHtml(appointment.clientName),
+      appointmentDateTime: escapeHtml(formatLocalDateTime(appointment.startsAt)),
+      publicCode: escapeHtml(appointment.publicCode),
+      manageUrl,
+    },
     ics ? [{ filename: "appointment.ics", content: Buffer.from(ics).toString("base64") }] : undefined,
   );
 }
@@ -91,16 +105,12 @@ function buildIcs(appointment: AppointmentForEmail): string | null {
 
 export async function sendAppointmentReminderEmail(appointment: AppointmentForEmail) {
   const manageUrl = `${siteUrl}/manage/${appointment.manageToken}`;
-  const html = `
-    <p>Hi ${escapeHtml(appointment.clientName)},</p>
-    <p>A reminder that your appointment is tomorrow, ${escapeHtml(formatLocalDateTime(appointment.startsAt))} (Brussels time).</p>
-    <p>Reference: ${escapeHtml(appointment.publicCode)}</p>
-    <p>Need to reschedule or cancel? <a href="${manageUrl}">${manageUrl}</a></p>
-    <p>See you soon.</p>
-    <p>— ${escapeHtml(BRAND_NAME)}</p>
-  `;
-  // Neutral subject line — no service/appointment type revealed.
-  await sendEmail(appointment.clientEmail, "Reminder: your appointment tomorrow", html);
+  await renderAndSend("appointment_reminder", appointment.clientEmail, {
+    clientName: escapeHtml(appointment.clientName),
+    appointmentDateTime: escapeHtml(formatLocalDateTime(appointment.startsAt)),
+    publicCode: escapeHtml(appointment.publicCode),
+    manageUrl,
+  });
 }
 
 type CompletedAppointmentForReceipt = {
@@ -120,23 +130,17 @@ type CompletedAppointmentForReceipt = {
 // proof of payment without needing to log into the portal to see the same
 // thing on the receipt page there.
 export async function sendReceiptEmail(appointment: CompletedAppointmentForReceipt) {
-  const amount = formatFeeCents(appointment.amountCents, appointment.currency);
-  const html = `
-    <p>Hi ${escapeHtml(appointment.clientName)},</p>
-    <p>Here's your receipt for the session on ${escapeHtml(formatLocalDateTime(appointment.startsAt))} (Brussels time).</p>
-    <table cellpadding="4" cellspacing="0">
-      <tr><td>Practitioner</td><td>${escapeHtml(PRACTITIONER_FULL)}</td></tr>
-      <tr><td>Session</td><td>${escapeHtml(appointment.serviceName)}</td></tr>
-      <tr><td>Duration</td><td>${appointment.durationMin} minutes</td></tr>
-      <tr><td>Format</td><td>${appointment.format === "in_person" ? "In person" : "Online"}</td></tr>
-      <tr><td>Payment method</td><td>${appointment.cashPaid ? "Cash" : "Arranged privately"}</td></tr>
-      <tr><td>Amount</td><td>${escapeHtml(amount)}</td></tr>
-      <tr><td>Reference</td><td>${escapeHtml(appointment.publicCode)}</td></tr>
-    </table>
-    <p>— ${escapeHtml(BRAND_NAME)}</p>
-  `;
-  // Neutral subject line — no service/appointment type revealed.
-  await sendEmail(appointment.clientEmail, "Your session receipt", html);
+  await renderAndSend("receipt", appointment.clientEmail, {
+    clientName: escapeHtml(appointment.clientName),
+    appointmentDateTime: escapeHtml(formatLocalDateTime(appointment.startsAt)),
+    practitionerFull: escapeHtml(PRACTITIONER_FULL),
+    serviceName: escapeHtml(appointment.serviceName),
+    durationMin: String(appointment.durationMin),
+    formatLabel: appointment.format === "in_person" ? "In person" : "Online",
+    paymentMethod: appointment.cashPaid ? "Cash" : "Arranged privately",
+    amount: escapeHtml(formatFeeCents(appointment.amountCents, appointment.currency)),
+    publicCode: escapeHtml(appointment.publicCode),
+  });
 }
 
 type AdminBookingNotification = {
@@ -158,19 +162,19 @@ export async function sendAdminBookingNotificationEmail(
   adminEmail: string,
   appointment: AdminBookingNotification,
 ) {
-  const html = `
-    <p>New booking received.</p>
-    <ul>
-      <li><strong>When:</strong> ${escapeHtml(formatLocalDateTime(appointment.startsAt))} (Brussels time)</li>
-      <li><strong>Service:</strong> ${escapeHtml(appointment.serviceName)}</li>
-      <li><strong>Format:</strong> ${appointment.format === "in_person" ? "In person" : "Online"}</li>
-      <li><strong>Client:</strong> ${escapeHtml(appointment.clientName)} — ${escapeHtml(appointment.clientEmail)}${appointment.clientPhone ? ` — ${escapeHtml(appointment.clientPhone)}` : ""}</li>
-      ${appointment.clientNote ? `<li><strong>Note from client:</strong> ${escapeHtml(appointment.clientNote)}</li>` : ""}
-      <li><strong>Reference:</strong> ${escapeHtml(appointment.publicCode)}</li>
-    </ul>
-    <p><a href="${siteUrl}/admin/appointments">View in the admin dashboard</a></p>
-  `;
-  await sendEmail(adminEmail, `New booking: ${formatLocalDateTime(appointment.startsAt)}`, html);
+  const clientContact = appointment.clientPhone
+    ? `${appointment.clientEmail} — ${appointment.clientPhone}`
+    : appointment.clientEmail;
+  await renderAndSend("admin_booking_notification", adminEmail, {
+    appointmentDateTime: escapeHtml(formatLocalDateTime(appointment.startsAt)),
+    serviceName: escapeHtml(appointment.serviceName),
+    formatLabel: appointment.format === "in_person" ? "In person" : "Online",
+    clientName: escapeHtml(appointment.clientName),
+    clientContact: escapeHtml(clientContact),
+    clientNote: appointment.clientNote ? escapeHtml(appointment.clientNote) : "(none)",
+    publicCode: escapeHtml(appointment.publicCode),
+    adminUrl: `${siteUrl}/admin/appointments`,
+  });
 }
 
 export async function sendReviewInviteEmail(
@@ -179,14 +183,10 @@ export async function sendReviewInviteEmail(
   token: string,
 ) {
   const reviewUrl = `${siteUrl}/reviews/write/${token}`;
-  const html = `
-    <p>Hi ${escapeHtml(clientName)},</p>
-    <p>Thank you for your recent appointment. If you'd like to, you can leave a private review here — you choose whether it's published, and how you're identified.</p>
-    <p><a href="${reviewUrl}">${reviewUrl}</a></p>
-    <p>This link is single-use and will expire after 30 days.</p>
-    <p>— ${escapeHtml(BRAND_NAME)}</p>
-  `;
-  await sendEmail(clientEmail, "A quick follow-up", html);
+  await renderAndSend("review_invite", clientEmail, {
+    clientName: escapeHtml(clientName),
+    reviewUrl,
+  });
 }
 
 type WaitlistNotice = {
@@ -198,48 +198,34 @@ type WaitlistNotice = {
 };
 
 export async function sendWaitlistJoinedEmail(entry: WaitlistNotice) {
-  const bookUrl = `${siteUrl}/book`;
-  const html = `
-    <p>Hi ${escapeHtml(entry.clientName)},</p>
-    <p>You're on the waitlist for ${escapeHtml(entry.serviceName)} (${entry.format === "in_person" ? "in person" : "online"}) on ${escapeHtml(formatLocalDateLabel(entry.date))}. If a time opens up on that date, we'll email you straight away so you can book it.</p>
-    <p>In the meantime, you're welcome to book any other available date here: <a href="${bookUrl}">${bookUrl}</a></p>
-    <p>— ${escapeHtml(BRAND_NAME)}</p>
-  `;
-  await sendEmail(entry.clientEmail, "You're on the waitlist", html);
+  await renderAndSend("waitlist_joined", entry.clientEmail, {
+    clientName: escapeHtml(entry.clientName),
+    serviceName: escapeHtml(entry.serviceName),
+    formatLabel: entry.format === "in_person" ? "in person" : "online",
+    dateLabel: escapeHtml(formatLocalDateLabel(entry.date)),
+    bookUrl: `${siteUrl}/book`,
+  });
 }
 
 export async function sendWaitlistSlotAvailableEmail(entry: WaitlistNotice) {
-  const bookUrl = `${siteUrl}/book`;
-  const html = `
-    <p>Hi ${escapeHtml(entry.clientName)},</p>
-    <p>Good news — a time just opened up for ${escapeHtml(entry.serviceName)} (${entry.format === "in_person" ? "in person" : "online"}) on ${escapeHtml(formatLocalDateLabel(entry.date))}.</p>
-    <p>Slots are first-come, first-served, so it's worth booking soon: <a href="${bookUrl}">${bookUrl}</a></p>
-    <p>— ${escapeHtml(BRAND_NAME)}</p>
-  `;
-  await sendEmail(entry.clientEmail, "A time just opened up", html);
+  await renderAndSend("waitlist_slot_available", entry.clientEmail, {
+    clientName: escapeHtml(entry.clientName),
+    serviceName: escapeHtml(entry.serviceName),
+    formatLabel: entry.format === "in_person" ? "in person" : "online",
+    dateLabel: escapeHtml(formatLocalDateLabel(entry.date)),
+    bookUrl: `${siteUrl}/book`,
+  });
 }
 
 export async function sendReengagementEmail(clientEmail: string, clientName: string) {
-  const bookUrl = `${siteUrl}/book`;
-  const html = `
-    <p>Hi ${escapeHtml(clientName)},</p>
-    <p>It's been a while since your last session — we just wanted to say the door's still open whenever you'd like to come back.</p>
-    <p>You can book a time here, whenever suits: <a href="${bookUrl}">${bookUrl}</a></p>
-    <p>— ${escapeHtml(BRAND_NAME)}</p>
-  `;
-  // Neutral subject line — no service/appointment type revealed.
-  await sendEmail(clientEmail, "It's been a while", html);
+  await renderAndSend("reengagement", clientEmail, {
+    clientName: escapeHtml(clientName),
+    bookUrl: `${siteUrl}/book`,
+  });
 }
 
 export async function sendClientPortalLinkEmail(email: string, portalUrl: string) {
-  const html = `
-    <p>Hi,</p>
-    <p>Use this secure link to view your appointment history and download session receipts:</p>
-    <p><a href="${portalUrl}">${portalUrl}</a></p>
-    <p>This link is single-use and expires in 30 minutes. If you didn't request it, you can safely ignore this email.</p>
-    <p>— ${escapeHtml(BRAND_NAME)}</p>
-  `;
-  await sendEmail(email, "Your client portal link", html);
+  await renderAndSend("client_portal_link", email, { portalUrl });
 }
 
 function escapeHtml(value: string): string {
