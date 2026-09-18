@@ -97,6 +97,7 @@ export function BookingWizard({
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");
   const [clientNote, setClientNote] = useState("");
+  const [giftCode, setGiftCode] = useState("");
   const [website, setWebsite] = useState(""); // honeypot
 
   const [submitting, setSubmitting] = useState(false);
@@ -238,6 +239,7 @@ export function BookingWizard({
           clientEmail,
           clientPhone,
           clientNote,
+          giftCode,
           website,
         }),
       });
@@ -573,6 +575,16 @@ export function BookingWizard({
               maxLength={600}
               value={clientNote}
               onChange={(e) => setClientNote(e.target.value)}
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="giftCode">{t(locale, "book_label_gift_code")}</label>
+            <input
+              id="giftCode"
+              type="text"
+              value={giftCode}
+              onChange={(e) => setGiftCode(e.target.value)}
+              placeholder="GIFT-XXXX-XXXXX"
             />
           </div>
           <div className="honeypot-field" aria-hidden="true">

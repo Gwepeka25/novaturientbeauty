@@ -80,12 +80,24 @@ export default async function ReceiptPage({
           </div>
           <div>
             <dt>Payment method</dt>
-            <dd>{appointment.packageId ? "Session package" : appointment.cashPaid ? "Cash" : "Arranged privately"}</dd>
+            <dd>
+              {appointment.packageId
+                ? "Session package"
+                : appointment.giftCodeId
+                  ? "Gift code"
+                  : appointment.cashPaid
+                    ? "Cash"
+                    : "Arranged privately"}
+            </dd>
           </div>
           <div className="receipt-total">
             <dt>Amount</dt>
             <dd>
-              {appointment.packageId ? "Covered by your session package" : formatFeeCents(amountCents, appointment.service.currency)}
+              {appointment.packageId
+                ? "Covered by your session package"
+                : appointment.giftCodeId
+                  ? "Covered by your gift code"
+                  : formatFeeCents(amountCents, appointment.service.currency)}
             </dd>
           </div>
         </dl>

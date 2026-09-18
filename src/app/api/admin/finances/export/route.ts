@@ -6,6 +6,7 @@ import {
   getRevenueRowsForExport,
   getExpenseRowsForExport,
   getPackageSaleRowsForExport,
+  getGiftCodeSaleRowsForExport,
 } from "@/lib/finance-export";
 
 export async function GET(request: NextRequest) {
@@ -15,13 +16,14 @@ export async function GET(request: NextRequest) {
   const rangeParam = new URL(request.url).searchParams.get("range") ?? undefined;
   const preset = isReportRangePreset(rangeParam) ? rangeParam : "last_3_months";
 
-  const [revenue, expenses, packageSales] = await Promise.all([
+  const [revenue, expenses, packageSales, giftCodeSales] = await Promise.all([
     getRevenueRowsForExport(resolveReportRange(preset)),
     getExpenseRowsForExport(resolveReportRangeLocalDates(preset)),
     getPackageSaleRowsForExport(resolveReportRange(preset)),
+    getGiftCodeSaleRowsForExport(resolveReportRange(preset)),
   ]);
 
-  const csv = buildFinancialReportCsv(revenue, expenses, packageSales);
+  const csv = buildFinancialReportCsv(revenue, expenses, packageSales, giftCodeSales);
 
   return new NextResponse(csv, {
     headers: {

@@ -105,6 +105,7 @@ type CompletedAppointmentForReceipt = {
   currency: string;
   locale?: string;
   coveredByPackage?: boolean;
+  coveredByGiftCode?: boolean;
 };
 
 // Sent automatically once a session is marked completed, so the client has
@@ -121,10 +122,17 @@ export async function sendReceiptEmail(appointment: CompletedAppointmentForRecei
       serviceName: escapeHtml(appointment.serviceName),
       durationMin: String(appointment.durationMin),
       formatLabel: appointment.format === "in_person" ? "In person" : "Online",
-      paymentMethod: appointment.coveredByPackage ? "Session package" : appointment.cashPaid ? "Cash" : "Arranged privately",
-      amount: appointment.coveredByPackage
-        ? "Covered by your session package"
-        : escapeHtml(formatFeeCents(appointment.amountCents, appointment.currency)),
+      paymentMethod: appointment.coveredByPackage
+        ? "Session package"
+        : appointment.coveredByGiftCode
+          ? "Gift code"
+          : appointment.cashPaid
+            ? "Cash"
+            : "Arranged privately",
+      amount:
+        appointment.coveredByPackage || appointment.coveredByGiftCode
+          ? `Covered by your ${appointment.coveredByPackage ? "session package" : "gift code"}`
+          : escapeHtml(formatFeeCents(appointment.amountCents, appointment.currency)),
       publicCode: escapeHtml(appointment.publicCode),
     },
     undefined,

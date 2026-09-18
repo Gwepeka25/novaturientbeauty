@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { bookingRequestSchema } from "@/lib/validation";
-import { createAppointment, SlotUnavailableError } from "@/lib/booking";
+import { createAppointment, SlotUnavailableError, GiftCodeInvalidError } from "@/lib/booking";
 import { sendBookingConfirmationEmail, sendAdminBookingNotificationEmail } from "@/lib/email";
 import { rateLimit } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
@@ -54,6 +54,7 @@ export async function POST(request: NextRequest) {
       clientPhone: data.clientPhone,
       clientNote: data.clientNote,
       locale: getRequestLocale(request),
+      giftCode: data.giftCode,
     });
 
     await sendBookingConfirmationEmail({
@@ -95,6 +96,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof SlotUnavailableError) {
       return NextResponse.json({ error: error.message }, { status: 409 });
+    }
+    if (error instanceof GiftCodeInvalidError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
     console.error("Booking failed:", error);
     return NextResponse.json(

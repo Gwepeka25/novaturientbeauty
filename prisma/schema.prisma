@@ -117,6 +117,8 @@ model Appointment {
   packageId        String? // set if this session was covered by a pre-paid
                             // package rather than paid for individually
   package          Package? @relation(fields: [packageId], references: [id])
+  giftCodeId       String? // set if this session was covered by a redeemed gift code
+  giftCode         GiftCode? @relation(fields: [giftCodeId], references: [id])
   reminderSentAt   DateTime? // set once the day-before reminder email has gone out
   reengagementSentAt DateTime? // set once a lapsed-client "it's been a while" email has
                                 // gone out for this being the client's most recent
@@ -264,6 +266,28 @@ model Package {
   appointments Appointment[]
 
   @@index([clientEmail])
+}
+
+// A single-use voucher, issued by the admin after being paid in cash or by
+// bank transfer (same reasoning as Package — no online payment on this
+// site). Anyone who has the code can redeem it toward one booking, full
+// value only (no partial redemption/change) — see src/lib/gift-codes.ts.
+model GiftCode {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  amountCents    Int
+  currency       String    @default("EUR")
+  purchaserName  String?
+  purchaserEmail String?
+  recipientNote  String? // optional message for whoever redeems it
+  issuedAt       DateTime  @default(now())
+  expiresAt      DateTime?
+  redeemedAt     DateTime?
+  active         Boolean   @default(true) // admin can void an unredeemed code
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  appointments Appointment[]
 }
 
 model AuditEvent {

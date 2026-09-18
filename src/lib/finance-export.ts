@@ -45,12 +45,24 @@ export type PackageSaleRow = {
   currency: string;
 };
 
+// A gift code is its own revenue event, recorded on the day it was issued
+// (i.e. paid for) — the appointment it's later redeemed against is a $0
+// row via priceCentsAtBooking, so nothing here gets double-counted.
+export type GiftCodeSaleRow = {
+  date: string; // "YYYY-MM-DD"
+  reference: string;
+  purchaserName: string;
+  amountCents: number;
+  currency: string;
+};
+
 const CSV_HEADER = ["Date", "Type", "Description", "Reference", "Amount", "Currency"];
 
 export function buildFinancialReportCsv(
   revenue: RevenueRow[],
   expenses: ExpenseRow[],
   packageSales: PackageSaleRow[] = [],
+  giftCodeSales: GiftCodeSaleRow[] = [],
 ): string {
   const lines: string[][] = [CSV_HEADER];
 
@@ -70,6 +82,14 @@ export function buildFinancialReportCsv(
       reference: p.reference,
       amountCents: p.amountCents,
       currency: p.currency,
+    })),
+    ...giftCodeSales.map((g) => ({
+      date: g.date,
+      type: "Revenue" as const,
+      description: `Gift code${g.purchaserName ? ` — ${g.purchaserName}` : ""}`,
+      reference: g.reference,
+      amountCents: g.amountCents,
+      currency: g.currency,
     })),
     ...expenses.map((e) => ({
       date: e.date,
@@ -135,6 +155,20 @@ export async function getPackageSaleRowsForExport(range: { from: Date; to: Date 
     totalSessions: p.totalSessions,
     amountCents: p.priceCentsPaid,
     currency: p.currency,
+  }));
+}
+
+export async function getGiftCodeSaleRowsForExport(range: { from: Date; to: Date }): Promise<GiftCodeSaleRow[]> {
+  const rows = await prisma.giftCode.findMany({
+    where: { issuedAt: { gte: range.from, lte: range.to } },
+    orderBy: { issuedAt: "asc" },
+  });
+  return rows.map((g) => ({
+    date: utcToLocalDateISO(g.issuedAt),
+    reference: g.id,
+    purchaserName: g.purchaserName ?? "",
+    amountCents: g.amountCents,
+    currency: g.currency,
   }));
 }
 

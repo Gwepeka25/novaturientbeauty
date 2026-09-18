@@ -5,6 +5,9 @@ import { nowUtc, utcToLocalDateISO } from "@/lib/timezone";
 import { acquireBookingLock } from "@/lib/db-lock";
 import { notifyWaitlistForOpening } from "@/lib/waitlist";
 import { releasePackageSession } from "@/lib/packages";
+import { GiftCodeInvalidError } from "@/lib/gift-codes";
+
+export { GiftCodeInvalidError };
 
 export class SlotUnavailableError extends Error {
   constructor() {
@@ -23,6 +26,7 @@ export type CreateAppointmentInput = {
   clientPhone?: string;
   clientNote?: string;
   locale?: string;
+  giftCode?: string;
 };
 
 export async function createAppointment(input: CreateAppointmentInput) {
@@ -53,28 +57,51 @@ export async function createAppointment(input: CreateAppointmentInput) {
         const stillAvailable = await isSlotStillAvailable(input.serviceId, input.startUtc, input.format);
         if (!stillAvailable) throw new SlotUnavailableError();
 
-        // Auto-apply a pre-paid package, oldest first, if this client has
-        // one eligible for this service (or a generic "any service" one)
-        // with sessions remaining. Safe from double-spending a credit under
-        // concurrent bookings because acquireBookingLock above already
-        // serializes every booking transaction, package-covered or not.
         let packageId: string | null = null;
-        const eligiblePackages = await tx.package.findMany({
-          where: {
-            clientEmail: input.clientEmail,
-            active: true,
-            OR: [{ serviceId: null }, { serviceId: input.serviceId }],
-          },
-          orderBy: { purchasedAt: "asc" },
-        });
-        const eligiblePackage = eligiblePackages.find((p) => p.usedSessions < p.totalSessions);
-        if (eligiblePackage) {
-          packageId = eligiblePackage.id;
-          await tx.package.update({
-            where: { id: eligiblePackage.id },
-            data: { usedSessions: { increment: 1 } },
+        let giftCodeId: string | null = null;
+
+        if (input.giftCode) {
+          // An explicitly-entered gift code takes priority over any
+          // package — the client is deliberately redeeming it, so an
+          // invalid code should fail loudly rather than silently fall
+          // back to charging normally.
+          const code = input.giftCode.trim().toUpperCase();
+          const giftCode = await tx.giftCode.findUnique({ where: { code } });
+          if (!giftCode || !giftCode.active) throw new GiftCodeInvalidError();
+          if (giftCode.redeemedAt) throw new GiftCodeInvalidError("That gift code has already been used.");
+          if (giftCode.expiresAt && giftCode.expiresAt < nowUtc()) {
+            throw new GiftCodeInvalidError("That gift code has expired.");
+          }
+          if (giftCode.amountCents < service.priceCents) {
+            throw new GiftCodeInvalidError("That gift code doesn't cover the full price of this session.");
+          }
+          giftCodeId = giftCode.id;
+          await tx.giftCode.update({ where: { id: giftCode.id }, data: { redeemedAt: nowUtc() } });
+        } else {
+          // Auto-apply a pre-paid package, oldest first, if this client has
+          // one eligible for this service (or a generic "any service" one)
+          // with sessions remaining. Safe from double-spending a credit
+          // under concurrent bookings because acquireBookingLock above
+          // already serializes every booking transaction.
+          const eligiblePackages = await tx.package.findMany({
+            where: {
+              clientEmail: input.clientEmail,
+              active: true,
+              OR: [{ serviceId: null }, { serviceId: input.serviceId }],
+            },
+            orderBy: { purchasedAt: "asc" },
           });
+          const eligiblePackage = eligiblePackages.find((p) => p.usedSessions < p.totalSessions);
+          if (eligiblePackage) {
+            packageId = eligiblePackage.id;
+            await tx.package.update({
+              where: { id: eligiblePackage.id },
+              data: { usedSessions: { increment: 1 } },
+            });
+          }
         }
+
+        const covered = packageId !== null || giftCodeId !== null;
 
         const appointment = await tx.appointment.create({
           data: {
@@ -90,7 +117,8 @@ export async function createAppointment(input: CreateAppointmentInput) {
             clientNote: input.clientNote || null,
             locale: input.locale ?? "en",
             packageId,
-            priceCentsAtBooking: packageId ? 0 : service.priceCents,
+            giftCodeId,
+            priceCentsAtBooking: covered ? 0 : service.priceCents,
             manageToken,
             manageTokenExp,
           },
@@ -100,7 +128,7 @@ export async function createAppointment(input: CreateAppointmentInput) {
           data: {
             action: "appointment.created",
             appointmentId: appointment.id,
-            metadata: JSON.stringify({ format: input.format, serviceId: input.serviceId, packageId }),
+            metadata: JSON.stringify({ format: input.format, serviceId: input.serviceId, packageId, giftCodeId }),
           },
         });
 

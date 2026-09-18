@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildFinancialReportCsv, type RevenueRow, type ExpenseRow, type PackageSaleRow } from "@/lib/finance-export";
+import { buildFinancialReportCsv, type RevenueRow, type ExpenseRow, type PackageSaleRow, type GiftCodeSaleRow } from "@/lib/finance-export";
 
 function revenueRow(overrides: Partial<RevenueRow> = {}): RevenueRow {
   return {
@@ -33,6 +33,17 @@ function packageSaleRow(overrides: Partial<PackageSaleRow> = {}): PackageSaleRow
     clientName: "Jamie Client",
     totalSessions: 5,
     amountCents: 30000,
+    currency: "EUR",
+    ...overrides,
+  };
+}
+
+function giftCodeSaleRow(overrides: Partial<GiftCodeSaleRow> = {}): GiftCodeSaleRow {
+  return {
+    date: "2026-06-04",
+    reference: "gift_xyz789",
+    purchaserName: "Sam Purchaser",
+    amountCents: 10000,
     currency: "EUR",
     ...overrides,
   };
@@ -97,5 +108,28 @@ describe("buildFinancialReportCsv", () => {
     );
     const dates = csv.split("\r\n").slice(1).map((line) => line.split(",")[0]);
     expect(dates).toEqual(["2026-06-01", "2026-06-15", "2026-06-20"]);
+  });
+
+  it("renders a gift code sale as a positive revenue row", () => {
+    const csv = buildFinancialReportCsv([], [], [], [giftCodeSaleRow()]);
+    const [, row] = csv.split("\r\n");
+    expect(row).toBe("2026-06-04,Revenue,Gift code — Sam Purchaser,gift_xyz789,100.00,EUR");
+  });
+
+  it("renders a gift code sale without a purchaser name", () => {
+    const csv = buildFinancialReportCsv([], [], [], [giftCodeSaleRow({ purchaserName: "" })]);
+    const [, row] = csv.split("\r\n");
+    expect(row).toBe("2026-06-04,Revenue,Gift code,gift_xyz789,100.00,EUR");
+  });
+
+  it("sorts gift code sales alongside everything else", () => {
+    const csv = buildFinancialReportCsv(
+      [revenueRow({ date: "2026-06-15" })],
+      [expenseRow({ date: "2026-06-20" })],
+      [packageSaleRow({ date: "2026-06-10" })],
+      [giftCodeSaleRow({ date: "2026-06-01" })],
+    );
+    const dates = csv.split("\r\n").slice(1).map((line) => line.split(",")[0]);
+    expect(dates).toEqual(["2026-06-01", "2026-06-10", "2026-06-15", "2026-06-20"]);
   });
 });
