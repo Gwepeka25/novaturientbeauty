@@ -1251,6 +1251,24 @@ legend {
   border-radius: 10px;
 }
 
+.portal-packages {
+  margin-bottom: 30px;
+}
+
+.portal-package-list {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.portal-package-list li {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 16px;
+  background: var(--paper);
+}
+
 .portal-appointment-list {
   list-style: none;
   display: grid;

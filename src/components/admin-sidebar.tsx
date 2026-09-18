@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/admin/appointments", label: "Appointments" },
   { href: "/admin/waitlist", label: "Waitlist" },
   { href: "/admin/clients", label: "Clients" },
+  { href: "/admin/packages", label: "Packages" },
   { href: "/admin/availability", label: "Availability" },
   { href: "/admin/services", label: "Services & fees" },
   { href: "/admin/reviews", label: "Reviews" },

@@ -4,6 +4,7 @@ import { isSlotStillAvailable } from "@/lib/availability";
 import { nowUtc, utcToLocalDateISO } from "@/lib/timezone";
 import { acquireBookingLock } from "@/lib/db-lock";
 import { notifyWaitlistForOpening } from "@/lib/waitlist";
+import { releasePackageSession } from "@/lib/packages";
 
 export class SlotUnavailableError extends Error {
   constructor() {
@@ -52,6 +53,29 @@ export async function createAppointment(input: CreateAppointmentInput) {
         const stillAvailable = await isSlotStillAvailable(input.serviceId, input.startUtc, input.format);
         if (!stillAvailable) throw new SlotUnavailableError();
 
+        // Auto-apply a pre-paid package, oldest first, if this client has
+        // one eligible for this service (or a generic "any service" one)
+        // with sessions remaining. Safe from double-spending a credit under
+        // concurrent bookings because acquireBookingLock above already
+        // serializes every booking transaction, package-covered or not.
+        let packageId: string | null = null;
+        const eligiblePackages = await tx.package.findMany({
+          where: {
+            clientEmail: input.clientEmail,
+            active: true,
+            OR: [{ serviceId: null }, { serviceId: input.serviceId }],
+          },
+          orderBy: { purchasedAt: "asc" },
+        });
+        const eligiblePackage = eligiblePackages.find((p) => p.usedSessions < p.totalSessions);
+        if (eligiblePackage) {
+          packageId = eligiblePackage.id;
+          await tx.package.update({
+            where: { id: eligiblePackage.id },
+            data: { usedSessions: { increment: 1 } },
+          });
+        }
+
         const appointment = await tx.appointment.create({
           data: {
             publicCode,
@@ -65,7 +89,8 @@ export async function createAppointment(input: CreateAppointmentInput) {
             clientPhone: input.clientPhone || null,
             clientNote: input.clientNote || null,
             locale: input.locale ?? "en",
-            priceCentsAtBooking: service.priceCents,
+            packageId,
+            priceCentsAtBooking: packageId ? 0 : service.priceCents,
             manageToken,
             manageTokenExp,
           },
@@ -75,7 +100,7 @@ export async function createAppointment(input: CreateAppointmentInput) {
           data: {
             action: "appointment.created",
             appointmentId: appointment.id,
-            metadata: JSON.stringify({ format: input.format, serviceId: input.serviceId }),
+            metadata: JSON.stringify({ format: input.format, serviceId: input.serviceId, packageId }),
           },
         });
 
@@ -167,6 +192,14 @@ export async function setAppointmentStatus(
       });
     } catch (error) {
       console.error("Failed to notify waitlist after cancellation:", error);
+    }
+
+    if (appointment.packageId) {
+      try {
+        await releasePackageSession(appointment.packageId);
+      } catch (error) {
+        console.error("Failed to release package session after cancellation:", error);
+      }
     }
   }
 

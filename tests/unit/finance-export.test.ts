@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildFinancialReportCsv, type RevenueRow, type ExpenseRow } from "@/lib/finance-export";
+import { buildFinancialReportCsv, type RevenueRow, type ExpenseRow, type PackageSaleRow } from "@/lib/finance-export";
 
 function revenueRow(overrides: Partial<RevenueRow> = {}): RevenueRow {
   return {
@@ -19,6 +19,19 @@ function expenseRow(overrides: Partial<ExpenseRow> = {}): ExpenseRow {
     date: "2026-06-03",
     category: "rent",
     description: "Room rental, June",
+    amountCents: 30000,
+    currency: "EUR",
+    ...overrides,
+  };
+}
+
+function packageSaleRow(overrides: Partial<PackageSaleRow> = {}): PackageSaleRow {
+  return {
+    date: "2026-06-02",
+    reference: "pkg_abc123",
+    serviceName: "Individual session",
+    clientName: "Jamie Client",
+    totalSessions: 5,
     amountCents: 30000,
     currency: "EUR",
     ...overrides,
@@ -66,5 +79,23 @@ describe("buildFinancialReportCsv", () => {
   it("returns only the header for no data", () => {
     const csv = buildFinancialReportCsv([], []);
     expect(csv.split("\r\n")).toHaveLength(1);
+  });
+
+  it("renders a package sale as a positive revenue row", () => {
+    const csv = buildFinancialReportCsv([], [], [packageSaleRow()]);
+    const [, row] = csv.split("\r\n");
+    expect(row).toBe(
+      "2026-06-02,Revenue,Package: 5x Individual session — Jamie Client,pkg_abc123,300.00,EUR",
+    );
+  });
+
+  it("sorts package sales alongside appointment revenue and expenses", () => {
+    const csv = buildFinancialReportCsv(
+      [revenueRow({ date: "2026-06-15" })],
+      [expenseRow({ date: "2026-06-20" })],
+      [packageSaleRow({ date: "2026-06-01" })],
+    );
+    const dates = csv.split("\r\n").slice(1).map((line) => line.split(",")[0]);
+    expect(dates).toEqual(["2026-06-01", "2026-06-15", "2026-06-20"]);
   });
 });

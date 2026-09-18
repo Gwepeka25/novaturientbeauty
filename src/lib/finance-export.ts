@@ -31,9 +31,27 @@ export type ExpenseRow = {
   currency: string;
 };
 
+// A package sale is its own revenue event, recorded on the day it was
+// paid for — not spread across the individual sessions redeemed from it
+// later (those show as their own $0 rows, already excluded from revenue
+// via priceCentsAtBooking, so nothing here gets double-counted).
+export type PackageSaleRow = {
+  date: string; // "YYYY-MM-DD"
+  reference: string;
+  serviceName: string; // or "Any service"
+  clientName: string;
+  totalSessions: number;
+  amountCents: number;
+  currency: string;
+};
+
 const CSV_HEADER = ["Date", "Type", "Description", "Reference", "Amount", "Currency"];
 
-export function buildFinancialReportCsv(revenue: RevenueRow[], expenses: ExpenseRow[]): string {
+export function buildFinancialReportCsv(
+  revenue: RevenueRow[],
+  expenses: ExpenseRow[],
+  packageSales: PackageSaleRow[] = [],
+): string {
   const lines: string[][] = [CSV_HEADER];
 
   const rows: { date: string; type: "Revenue" | "Expense"; description: string; reference: string; amountCents: number; currency: string }[] = [
@@ -44,6 +62,14 @@ export function buildFinancialReportCsv(revenue: RevenueRow[], expenses: Expense
       reference: r.reference,
       amountCents: r.amountCents,
       currency: r.currency,
+    })),
+    ...packageSales.map((p) => ({
+      date: p.date,
+      type: "Revenue" as const,
+      description: `Package: ${p.totalSessions}x ${p.serviceName} — ${p.clientName}`,
+      reference: p.reference,
+      amountCents: p.amountCents,
+      currency: p.currency,
     })),
     ...expenses.map((e) => ({
       date: e.date,
@@ -92,6 +118,23 @@ export async function getRevenueRowsForExport(range: { from: Date; to: Date }): 
     format: a.format,
     amountCents: a.priceCentsAtBooking ?? a.service.priceCents,
     currency: a.service.currency,
+  }));
+}
+
+export async function getPackageSaleRowsForExport(range: { from: Date; to: Date }): Promise<PackageSaleRow[]> {
+  const rows = await prisma.package.findMany({
+    where: { purchasedAt: { gte: range.from, lte: range.to } },
+    include: { service: true },
+    orderBy: { purchasedAt: "asc" },
+  });
+  return rows.map((p) => ({
+    date: utcToLocalDateISO(p.purchasedAt),
+    reference: p.id,
+    serviceName: p.service?.name ?? "Any service",
+    clientName: p.clientName,
+    totalSessions: p.totalSessions,
+    amountCents: p.priceCentsPaid,
+    currency: p.currency,
   }));
 }
 

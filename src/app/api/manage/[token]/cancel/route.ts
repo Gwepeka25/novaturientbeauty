@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { nowUtc, minutesBetween, utcToLocalDateISO } from "@/lib/timezone";
 import { rateLimit } from "@/lib/rate-limit";
 import { notifyWaitlistForOpening } from "@/lib/waitlist";
+import { releasePackageSession } from "@/lib/packages";
 
 export async function POST(
   request: NextRequest,
@@ -53,6 +54,14 @@ export async function POST(
     });
   } catch (error) {
     console.error("Failed to notify waitlist after cancellation:", error);
+  }
+
+  if (appointment.packageId) {
+    try {
+      await releasePackageSession(appointment.packageId);
+    } catch (error) {
+      console.error("Failed to release package session after cancellation:", error);
+    }
   }
 
   return NextResponse.json({ ok: true, isLate });

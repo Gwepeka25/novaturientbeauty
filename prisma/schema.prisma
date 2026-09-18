@@ -43,6 +43,7 @@ model Service {
 
   appointments    Appointment[]
   waitlistEntries WaitlistEntry[]
+  packages        Package[]
 }
 
 // Recurring weekly availability, e.g. "Tuesdays 09:00-17:00". One row per
@@ -113,6 +114,9 @@ model Appointment {
   onlineMeetingUrl String? // only set/sent after confirmation
   manageToken      String   @unique // secure token for reschedule/cancel links
   manageTokenExp   DateTime
+  packageId        String? // set if this session was covered by a pre-paid
+                            // package rather than paid for individually
+  package          Package? @relation(fields: [packageId], references: [id])
   reminderSentAt   DateTime? // set once the day-before reminder email has gone out
   reengagementSentAt DateTime? // set once a lapsed-client "it's been a while" email has
                                 // gone out for this being the client's most recent
@@ -234,6 +238,32 @@ model WaitlistEntry {
   createdAt   DateTime @default(now())
 
   @@index([date, serviceId, format, status])
+}
+
+// A block of pre-paid sessions, recorded by the admin after being paid in
+// cash or by bank transfer — there's no online payment on this site, so
+// this mirrors how every other payment here is handled. Bookings for a
+// matching, still-eligible client automatically consume one session
+// (see src/lib/packages.ts); cancelling one gives the session back.
+model Package {
+  id             String    @id @default(cuid())
+  clientEmail    String
+  clientName     String
+  serviceId      String? // null = valid for any service
+  service        Service?  @relation(fields: [serviceId], references: [id])
+  totalSessions  Int
+  usedSessions   Int       @default(0)
+  priceCentsPaid Int
+  currency       String    @default("EUR")
+  purchasedAt    DateTime  @default(now())
+  note           String? // e.g. how it was paid
+  active         Boolean   @default(true) // admin can void a package
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  appointments Appointment[]
+
+  @@index([clientEmail])
 }
 
 model AuditEvent {

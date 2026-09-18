@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getClientSession } from "@/lib/client-session";
 import { formatLocalDateTime } from "@/lib/timezone";
+import { getActivePackagesForClient } from "@/lib/packages";
 import { requestPortalLinkAction, portalLogoutAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -90,6 +91,7 @@ export default async function PortalPage({
   const past = appointments.filter((a) => !upcoming.includes(a));
   const completedCount = appointments.filter((a) => a.status === "completed").length;
   const milestone = MILESTONES.includes(completedCount) ? completedCount : null;
+  const activePackages = await getActivePackagesForClient(session.email);
 
   return (
     <section className="wrap section booking-section">
@@ -116,6 +118,20 @@ export default async function PortalPage({
           Book your next session
         </Link>
       </div>
+
+      {activePackages.length > 0 && (
+        <div className="portal-packages">
+          <h2 className="serif">Your packages</h2>
+          <ul className="portal-package-list">
+            {activePackages.map((p) => (
+              <li key={p.id}>
+                {p.serviceName ?? "Any service"} — {p.totalSessions - p.usedSessions} of {p.totalSessions}{" "}
+                session{p.totalSessions === 1 ? "" : "s"} remaining
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <h2 className="serif">Upcoming</h2>
       {upcoming.length === 0 && <p>No upcoming appointments.</p>}

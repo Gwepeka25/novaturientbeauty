@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { isReportRangePreset, resolveReportRange, resolveReportRangeLocalDates } from "@/lib/report-range";
-import { buildFinancialReportCsv, getRevenueRowsForExport, getExpenseRowsForExport } from "@/lib/finance-export";
+import {
+  buildFinancialReportCsv,
+  getRevenueRowsForExport,
+  getExpenseRowsForExport,
+  getPackageSaleRowsForExport,
+} from "@/lib/finance-export";
 
 export async function GET(request: NextRequest) {
   const session = await getSession();
@@ -10,12 +15,13 @@ export async function GET(request: NextRequest) {
   const rangeParam = new URL(request.url).searchParams.get("range") ?? undefined;
   const preset = isReportRangePreset(rangeParam) ? rangeParam : "last_3_months";
 
-  const [revenue, expenses] = await Promise.all([
+  const [revenue, expenses, packageSales] = await Promise.all([
     getRevenueRowsForExport(resolveReportRange(preset)),
     getExpenseRowsForExport(resolveReportRangeLocalDates(preset)),
+    getPackageSaleRowsForExport(resolveReportRange(preset)),
   ]);
 
-  const csv = buildFinancialReportCsv(revenue, expenses);
+  const csv = buildFinancialReportCsv(revenue, expenses, packageSales);
 
   return new NextResponse(csv, {
     headers: {
