@@ -2,8 +2,10 @@
 
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/admin-auth";
+import { regenerateCalendarFeedToken } from "@/lib/calendar-feed";
 
 const schema = z.object({
   currentPassword: z.string().min(1),
@@ -33,4 +35,10 @@ export async function changePassword(formData: FormData): Promise<{ error?: stri
   });
 
   return { ok: true };
+}
+
+export async function regenerateCalendarFeed(): Promise<void> {
+  const session = await requireAdminSession();
+  await regenerateCalendarFeedToken(session.sub);
+  revalidatePath("/admin/settings");
 }
