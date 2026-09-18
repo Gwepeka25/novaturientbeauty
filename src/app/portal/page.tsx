@@ -12,6 +12,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+const MILESTONES = [3, 5, 10, 20, 50, 100];
+
 const STATUS_LABEL: Record<string, string> = {
   pending: "Pending",
   confirmed: "Confirmed",
@@ -86,6 +88,8 @@ export default async function PortalPage({
     (a) => a.startsAt > now && (a.status === "pending" || a.status === "confirmed"),
   );
   const past = appointments.filter((a) => !upcoming.includes(a));
+  const completedCount = appointments.filter((a) => a.status === "completed").length;
+  const milestone = MILESTONES.includes(completedCount) ? completedCount : null;
 
   return (
     <section className="wrap section booking-section">
@@ -99,6 +103,19 @@ export default async function PortalPage({
           Sign out
         </button>
       </form>
+
+      {milestone && (
+        <p className="portal-milestone" role="status">
+          You&rsquo;ve completed {milestone} session{milestone === 1 ? "" : "s"} with Michelle — thank you for
+          trusting us with your journey.
+        </p>
+      )}
+
+      <div className="portal-book-next">
+        <Link className="button" href="/book">
+          Book your next session
+        </Link>
+      </div>
 
       <h2 className="serif">Upcoming</h2>
       {upcoming.length === 0 && <p>No upcoming appointments.</p>}
@@ -129,6 +146,7 @@ export default async function PortalPage({
                 <b>{a.service.name}</b>
                 <p>{formatLocalDateTime(a.startsAt)}</p>
                 <small>{STATUS_LABEL[a.status] ?? a.status}</small>
+                {a.clientVisibleNote && <p className="portal-note">{a.clientVisibleNote}</p>}
               </div>
               {a.status === "completed" && (
                 <Link className="button button-outline" href={`/portal/receipt/${a.id}`}>

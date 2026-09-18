@@ -105,6 +105,10 @@ model Appointment {
                                              // language at booking time, so later emails
                                              // (reminder, receipt, etc.) can be sent in it
   privateOpsNote   String? // admin-only operational note, never clinical
+  clientVisibleNote String? // optional take-away written by the practitioner
+                             // after a session, shown to the client in the
+                             // portal — never clinical, the client's choice
+                             // to read it
   cashPaid         Boolean  @default(false)
   onlineMeetingUrl String? // only set/sent after confirmation
   manageToken      String   @unique // secure token for reschedule/cancel links

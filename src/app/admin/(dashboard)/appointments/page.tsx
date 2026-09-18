@@ -3,6 +3,7 @@ import { requireAdminSession } from "@/lib/admin-auth";
 import { formatLocalDateTime } from "@/lib/timezone";
 import { StatusSelect } from "@/components/admin/status-select";
 import { CashToggle } from "@/components/admin/cash-toggle";
+import { updateClientVisibleNote } from "./actions";
 import type { Prisma } from "@prisma/client";
 
 export default async function AdminAppointmentsPage({
@@ -76,6 +77,7 @@ export default async function AdminAppointmentsPage({
               <th>Format</th>
               <th>Cash</th>
               <th>Status</th>
+              <th>Take-away note</th>
             </tr>
           </thead>
           <tbody>
@@ -99,6 +101,27 @@ export default async function AdminAppointmentsPage({
                 </td>
                 <td>
                   <StatusSelect appointmentId={a.id} status={a.status} />
+                </td>
+                <td>
+                  <details>
+                    <summary style={{ cursor: "pointer", color: "var(--muted)", fontSize: 13 }}>
+                      {a.clientVisibleNote ? "Edit note" : "Add note"}
+                    </summary>
+                    <form action={updateClientVisibleNote} style={{ marginTop: 8, minWidth: 220 }}>
+                      <input type="hidden" name="appointmentId" value={a.id} />
+                      <textarea
+                        name="clientVisibleNote"
+                        rows={3}
+                        defaultValue={a.clientVisibleNote ?? ""}
+                        placeholder="Shown to the client in their portal after this session"
+                      />
+                      <div className="admin-form-actions">
+                        <button className="admin-btn admin-btn-outline" type="submit">
+                          Save
+                        </button>
+                      </div>
+                    </form>
+                  </details>
                 </td>
               </tr>
             ))}

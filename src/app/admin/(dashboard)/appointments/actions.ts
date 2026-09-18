@@ -75,6 +75,27 @@ export async function toggleCashPaid(appointmentId: string, cashPaid: boolean) {
   revalidatePath("/admin/appointments");
 }
 
+export async function updateClientVisibleNote(formData: FormData) {
+  const session = await requireAdminSession();
+  const appointmentId = String(formData.get("appointmentId"));
+  const note = String(formData.get("clientVisibleNote") ?? "").trim();
+
+  await prisma.$transaction([
+    prisma.appointment.update({
+      where: { id: appointmentId },
+      data: { clientVisibleNote: note || null },
+    }),
+    prisma.auditEvent.create({
+      data: {
+        action: "appointment.client_visible_note_updated",
+        appointmentId,
+        actorId: session.sub,
+      },
+    }),
+  ]);
+  revalidatePath("/admin/appointments");
+}
+
 export async function updateOperationalNote(appointmentId: string, note: string) {
   const session = await requireAdminSession();
   await prisma.$transaction([
