@@ -168,11 +168,14 @@ model WebsiteContent {
 // falls back to the default, so a bad edit can never break outgoing mail.
 model EmailTemplate {
   id        String   @id @default(cuid())
-  key       String   @unique // e.g. "booking_confirmation"
+  key       String // e.g. "booking_confirmation"
+  locale    String   @default("en") // "en" | "fr" | "nl"
   subject   String
   bodyHtml  String
   approved  Boolean  @default(false)
   updatedAt DateTime @updatedAt
+
+  @@unique([key, locale])
 }
 
 // Business expenses, entered manually by the admin — there is no bank

@@ -13,53 +13,49 @@ function translatedDefault(key: ContentKey, locale: string): string | undefined 
 }
 
 /**
- * Reads editable website copy. The admin panel only edits the English
- * ("en") row for each key, so a non-English request first tries a
- * compiled-in translation (src/lib/content-defaults.ts); for keys that
- * aren't translated yet (contact details, credentials, legal drafts) it
- * falls back to the current English value instead — so Michelle's real
- * edits (e.g. her actual contact email) still show for every language,
- * rather than every non-English visitor seeing the English placeholder
- * forever. Falls back to the compiled English default when nothing is
- * approved yet, so the site never shows blank/broken copy.
+ * Reads editable website copy for a locale. Each (key, locale) pair is its
+ * own row in WebsiteContent — /admin/content can edit and approve any of
+ * them, for any locale. Fallback chain per key:
+ *   1. An approved row for this exact (key, locale) — an admin's own edit.
+ *   2. The compiled-in translation (src/lib/content-defaults.ts), for keys
+ *      translated so far.
+ *   3. The English value (its own approved row, or the English default) —
+ *      so a key with no translation yet (contact details, credentials,
+ *      legal drafts) still shows something real rather than blank, and a
+ *      real edit (e.g. the actual contact email) shows for every language.
  */
 export async function getContent(key: ContentKey, locale = "en"): Promise<string> {
-  if (locale !== "en") {
-    const translated = translatedDefault(key, locale);
-    if (translated) return translated;
-    return getContent(key, "en");
-  }
-  const row = await prisma.websiteContent.findUnique({
-    where: { key_locale: { key, locale } },
-  });
-  return row?.approved ? row.value : CONTENT_DEFAULTS[key];
+  return (await getContentMany([key], locale))[key];
 }
 
 export async function getContentMany(
   keys: ContentKey[],
   locale = "en",
 ): Promise<Record<string, string>> {
-  if (locale !== "en") {
-    const untranslated: ContentKey[] = [];
-    const result: Record<string, string> = {};
-    for (const key of keys) {
-      const translated = translatedDefault(key, locale);
-      if (translated) result[key] = translated;
-      else untranslated.push(key);
-    }
-    if (untranslated.length > 0) {
-      Object.assign(result, await getContentMany(untranslated, "en"));
-    }
+  const rows = await prisma.websiteContent.findMany({ where: { key: { in: keys }, locale } });
+  const approved = new Map(rows.filter((r) => r.approved).map((r) => [r.key, r.value]));
+
+  const result: Record<string, string> = {};
+  const needsFallback: ContentKey[] = [];
+  for (const key of keys) {
+    if (approved.has(key)) result[key] = approved.get(key)!;
+    else needsFallback.push(key);
+  }
+  if (needsFallback.length === 0) return result;
+
+  if (locale === "en") {
+    for (const key of needsFallback) result[key] = CONTENT_DEFAULTS[key];
     return result;
   }
 
-  const rows = await prisma.websiteContent.findMany({
-    where: { key: { in: keys }, locale },
-  });
-  const overrides = new Map(rows.filter((r) => r.approved).map((r) => [r.key, r.value]));
-  const result: Record<string, string> = {};
-  for (const key of keys) {
-    result[key] = overrides.get(key) ?? CONTENT_DEFAULTS[key];
+  const needsEnglish: ContentKey[] = [];
+  for (const key of needsFallback) {
+    const translated = translatedDefault(key, locale);
+    if (translated) result[key] = translated;
+    else needsEnglish.push(key);
+  }
+  if (needsEnglish.length > 0) {
+    Object.assign(result, await getContentMany(needsEnglish, "en"));
   }
   return result;
 }

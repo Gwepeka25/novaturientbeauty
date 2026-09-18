@@ -2,7 +2,10 @@ import { describe, it, expect } from "vitest";
 import {
   renderEmailTemplate,
   EMAIL_TEMPLATE_DEFAULTS,
+  EMAIL_TEMPLATE_DEFAULTS_FR,
+  EMAIL_TEMPLATE_DEFAULTS_NL,
   EMAIL_TEMPLATE_KEYS,
+  TRANSLATABLE_EMAIL_KEYS,
 } from "@/lib/email-template-defaults";
 
 describe("renderEmailTemplate", () => {
@@ -50,6 +53,28 @@ describe("EMAIL_TEMPLATE_DEFAULTS", () => {
       for (const variable of def.variables) {
         const token = `{{${variable}}}`;
         expect(def.subject.includes(token) || def.bodyHtml.includes(token)).toBe(true);
+      }
+    }
+  });
+});
+
+describe("EMAIL_TEMPLATE_DEFAULTS_FR / _NL", () => {
+  it("excludes admin_booking_notification — that email lands in Michelle's own inbox, never a client's", () => {
+    expect(EMAIL_TEMPLATE_DEFAULTS_FR.admin_booking_notification).toBeUndefined();
+    expect(EMAIL_TEMPLATE_DEFAULTS_NL.admin_booking_notification).toBeUndefined();
+    expect(TRANSLATABLE_EMAIL_KEYS).not.toContain("admin_booking_notification");
+  });
+
+  it("every translated template still uses the same {{variables}} as the English default", () => {
+    for (const key of TRANSLATABLE_EMAIL_KEYS) {
+      const en = EMAIL_TEMPLATE_DEFAULTS[key];
+      for (const dict of [EMAIL_TEMPLATE_DEFAULTS_FR, EMAIL_TEMPLATE_DEFAULTS_NL]) {
+        const translated = dict[key];
+        if (!translated) continue;
+        for (const variable of en.variables) {
+          const token = `{{${variable}}}`;
+          expect(translated.subject.includes(token) || translated.bodyHtml.includes(token)).toBe(true);
+        }
       }
     }
   });

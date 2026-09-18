@@ -176,6 +176,166 @@ export const EMAIL_TEMPLATE_DEFAULTS: Record<EmailTemplateKey, EmailTemplateDefa
   },
 };
 
+// French/Dutch subject+body for the client-facing templates. Deliberately
+// excludes admin_booking_notification — that one lands in Michelle's own
+// inbox, not a client's, so translating it wouldn't serve anyone. A key not
+// listed here (or in the NL dictionary) simply isn't offered for
+// translation in /admin/email-templates — same "not everything needs it"
+// reasoning as content-defaults.ts.
+export const EMAIL_TEMPLATE_DEFAULTS_FR: Partial<Record<EmailTemplateKey, EmailTemplate>> = {
+  booking_confirmation: {
+    subject: "Confirmation de votre rendez-vous",
+    bodyHtml: `<p>Bonjour {{clientName}},</p>
+<p>Votre rendez-vous est confirmé pour le {{appointmentDateTime}} (heure de Bruxelles).</p>
+<p>Référence : {{publicCode}}</p>
+<p>Vous pouvez consulter, reprogrammer ou annuler votre rendez-vous ici : <a href="{{manageUrl}}">{{manageUrl}}</a></p>
+<p>Le paiement se fait en espèces pour les séances en présentiel. Pour une séance en ligne, le lien de connexion et les modalités de paiement seront confirmés ici à l'approche du rendez-vous.</p>
+<p>À bientôt.</p>
+<p>— {{brandName}}</p>`,
+  },
+  appointment_reminder: {
+    subject: "Rappel : votre rendez-vous demain",
+    bodyHtml: `<p>Bonjour {{clientName}},</p>
+<p>Petit rappel : votre rendez-vous est demain, {{appointmentDateTime}} (heure de Bruxelles).</p>
+<p>Référence : {{publicCode}}</p>
+<p>Besoin de reprogrammer ou d'annuler ? <a href="{{manageUrl}}">{{manageUrl}}</a></p>
+<p>À bientôt.</p>
+<p>— {{brandName}}</p>`,
+  },
+  receipt: {
+    subject: "Votre reçu de séance",
+    bodyHtml: `<p>Bonjour {{clientName}},</p>
+<p>Voici votre reçu pour la séance du {{appointmentDateTime}} (heure de Bruxelles).</p>
+<table cellpadding="4" cellspacing="0">
+  <tr><td>Praticienne</td><td>{{practitionerFull}}</td></tr>
+  <tr><td>Séance</td><td>{{serviceName}}</td></tr>
+  <tr><td>Durée</td><td>{{durationMin}} minutes</td></tr>
+  <tr><td>Format</td><td>{{formatLabel}}</td></tr>
+  <tr><td>Mode de paiement</td><td>{{paymentMethod}}</td></tr>
+  <tr><td>Montant</td><td>{{amount}}</td></tr>
+  <tr><td>Référence</td><td>{{publicCode}}</td></tr>
+</table>
+<p>— {{brandName}}</p>`,
+  },
+  review_invite: {
+    subject: "Un petit suivi",
+    bodyHtml: `<p>Bonjour {{clientName}},</p>
+<p>Merci pour votre récent rendez-vous. Si vous le souhaitez, vous pouvez laisser un avis privé ici — vous choisissez s'il est publié, et comment vous êtes identifié(e).</p>
+<p><a href="{{reviewUrl}}">{{reviewUrl}}</a></p>
+<p>Ce lien est à usage unique et expirera après 30 jours.</p>
+<p>— {{brandName}}</p>`,
+  },
+  client_portal_link: {
+    subject: "Votre lien vers l'espace client",
+    bodyHtml: `<p>Bonjour,</p>
+<p>Utilisez ce lien sécurisé pour consulter l'historique de vos rendez-vous et télécharger vos reçus de séance :</p>
+<p><a href="{{portalUrl}}">{{portalUrl}}</a></p>
+<p>Ce lien est à usage unique et expire dans 30 minutes. Si vous n'avez rien demandé, vous pouvez ignorer cet email sans problème.</p>
+<p>— {{brandName}}</p>`,
+  },
+  waitlist_joined: {
+    subject: "Vous êtes sur la liste d'attente",
+    bodyHtml: `<p>Bonjour {{clientName}},</p>
+<p>Vous êtes sur la liste d'attente pour {{serviceName}} ({{formatLabel}}) le {{dateLabel}}. Si un créneau se libère ce jour-là, nous vous préviendrons immédiatement par email afin que vous puissiez le réserver.</p>
+<p>En attendant, vous êtes libre de réserver toute autre date disponible ici : <a href="{{bookUrl}}">{{bookUrl}}</a></p>
+<p>— {{brandName}}</p>`,
+  },
+  waitlist_slot_available: {
+    subject: "Un créneau vient de se libérer",
+    bodyHtml: `<p>Bonjour {{clientName}},</p>
+<p>Bonne nouvelle — un créneau vient de se libérer pour {{serviceName}} ({{formatLabel}}) le {{dateLabel}}.</p>
+<p>Les créneaux sont attribués dans l'ordre d'arrivée, mieux vaut donc réserver rapidement : <a href="{{bookUrl}}">{{bookUrl}}</a></p>
+<p>— {{brandName}}</p>`,
+  },
+  reengagement: {
+    subject: "Cela fait un moment",
+    bodyHtml: `<p>Bonjour {{clientName}},</p>
+<p>Cela fait un moment depuis votre dernière séance — nous voulions simplement vous dire que la porte reste ouverte, quand vous souhaiterez revenir.</p>
+<p>Vous pouvez réserver un créneau ici, quand cela vous convient : <a href="{{bookUrl}}">{{bookUrl}}</a></p>
+<p>— {{brandName}}</p>`,
+  },
+};
+
+export const EMAIL_TEMPLATE_DEFAULTS_NL: Partial<Record<EmailTemplateKey, EmailTemplate>> = {
+  booking_confirmation: {
+    subject: "Bevestiging van je afspraak",
+    bodyHtml: `<p>Hoi {{clientName}},</p>
+<p>Je afspraak is bevestigd voor {{appointmentDateTime}} (Brusselse tijd).</p>
+<p>Referentie: {{publicCode}}</p>
+<p>Je kan je afspraak hier bekijken, verplaatsen of annuleren: <a href="{{manageUrl}}">{{manageUrl}}</a></p>
+<p>Betaling gebeurt contant voor sessies in persoon. Voor een online sessie worden de vergaderlink en de betalingsregeling hier bevestigd naarmate je afspraak dichterbij komt.</p>
+<p>Tot binnenkort.</p>
+<p>— {{brandName}}</p>`,
+  },
+  appointment_reminder: {
+    subject: "Herinnering: je afspraak morgen",
+    bodyHtml: `<p>Hoi {{clientName}},</p>
+<p>Even een herinnering: je afspraak is morgen, {{appointmentDateTime}} (Brusselse tijd).</p>
+<p>Referentie: {{publicCode}}</p>
+<p>Moet je verplaatsen of annuleren? <a href="{{manageUrl}}">{{manageUrl}}</a></p>
+<p>Tot binnenkort.</p>
+<p>— {{brandName}}</p>`,
+  },
+  receipt: {
+    subject: "Je sessiebon",
+    bodyHtml: `<p>Hoi {{clientName}},</p>
+<p>Hier is je bon voor de sessie op {{appointmentDateTime}} (Brusselse tijd).</p>
+<table cellpadding="4" cellspacing="0">
+  <tr><td>Behandelaar</td><td>{{practitionerFull}}</td></tr>
+  <tr><td>Sessie</td><td>{{serviceName}}</td></tr>
+  <tr><td>Duur</td><td>{{durationMin}} minuten</td></tr>
+  <tr><td>Format</td><td>{{formatLabel}}</td></tr>
+  <tr><td>Betaalmethode</td><td>{{paymentMethod}}</td></tr>
+  <tr><td>Bedrag</td><td>{{amount}}</td></tr>
+  <tr><td>Referentie</td><td>{{publicCode}}</td></tr>
+</table>
+<p>— {{brandName}}</p>`,
+  },
+  review_invite: {
+    subject: "Een korte follow-up",
+    bodyHtml: `<p>Hoi {{clientName}},</p>
+<p>Bedankt voor je recente afspraak. Als je dat wil, kan je hier een privé review achterlaten — jij kiest of ze gepubliceerd wordt, en hoe je geïdentificeerd wordt.</p>
+<p><a href="{{reviewUrl}}">{{reviewUrl}}</a></p>
+<p>Deze link is eenmalig te gebruiken en verloopt na 30 dagen.</p>
+<p>— {{brandName}}</p>`,
+  },
+  client_portal_link: {
+    subject: "Je link naar het klantenportaal",
+    bodyHtml: `<p>Hoi,</p>
+<p>Gebruik deze beveiligde link om je afsprakenoverzicht te bekijken en je sessiebonnen te downloaden:</p>
+<p><a href="{{portalUrl}}">{{portalUrl}}</a></p>
+<p>Deze link is eenmalig te gebruiken en verloopt na 30 minuten. Als je dit niet hebt aangevraagd, kan je deze e-mail gewoon negeren.</p>
+<p>— {{brandName}}</p>`,
+  },
+  waitlist_joined: {
+    subject: "Je staat op de wachtlijst",
+    bodyHtml: `<p>Hoi {{clientName}},</p>
+<p>Je staat op de wachtlijst voor {{serviceName}} ({{formatLabel}}) op {{dateLabel}}. Als er die dag een plek vrijkomt, mailen we je meteen zodat je kan boeken.</p>
+<p>Ondertussen kan je gerust een andere beschikbare datum boeken hier: <a href="{{bookUrl}}">{{bookUrl}}</a></p>
+<p>— {{brandName}}</p>`,
+  },
+  waitlist_slot_available: {
+    subject: "Er is net een plek vrijgekomen",
+    bodyHtml: `<p>Hoi {{clientName}},</p>
+<p>Goed nieuws — er is net een plek vrijgekomen voor {{serviceName}} ({{formatLabel}}) op {{dateLabel}}.</p>
+<p>Plekken zijn beschikbaar op basis van wie eerst komt, dus boek snel: <a href="{{bookUrl}}">{{bookUrl}}</a></p>
+<p>— {{brandName}}</p>`,
+  },
+  reengagement: {
+    subject: "Het is even geleden",
+    bodyHtml: `<p>Hoi {{clientName}},</p>
+<p>Het is even geleden sinds je laatste sessie — we wilden je gewoon laten weten dat de deur openstaat wanneer je terug wil komen.</p>
+<p>Je kan hier een moment boeken, wanneer het jou past: <a href="{{bookUrl}}">{{bookUrl}}</a></p>
+<p>— {{brandName}}</p>`,
+  },
+};
+
+// Keys with at least one compiled French or Dutch default — the ones
+// /admin/email-templates offers to translate.
+export const TRANSLATABLE_EMAIL_KEYS: EmailTemplateKey[] = EMAIL_TEMPLATE_KEYS.filter(
+  (key) => key in EMAIL_TEMPLATE_DEFAULTS_FR || key in EMAIL_TEMPLATE_DEFAULTS_NL,
+);
+
 /** Substitutes {{name}} tokens; a name with no matching variable is left untouched. */
 export function renderEmailTemplate(template: EmailTemplate, vars: Record<string, string>): EmailTemplate {
   return {

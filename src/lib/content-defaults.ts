@@ -114,3 +114,12 @@ export const CONTENT_DEFAULTS_NL: Partial<Record<ContentKey, string>> = {
   "sessions.cash_note":
     "Je sessie is een bewuste uitwisseling van tijd, aandacht en zorg. Voorlopig gebeurt die uitwisseling contant tijdens je afspraak in persoon. Voor een online sessie bevestigt Michelle de betalingsregeling privé na de boeking.",
 };
+
+// Keys with at least one compiled French or Dutch default — these are the
+// ones /admin/content offers to translate. The rest (contact details,
+// credentials, legal drafts) stay English-only by design; see the note
+// above CONTENT_DEFAULTS_FR.
+export const TRANSLATABLE_CONTENT_KEYS: ContentKey[] = Object.keys({
+  ...CONTENT_DEFAULTS_FR,
+  ...CONTENT_DEFAULTS_NL,
+}) as ContentKey[];
