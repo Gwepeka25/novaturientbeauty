@@ -219,6 +219,18 @@ export async function sendWaitlistSlotAvailableEmail(entry: WaitlistNotice) {
   await sendEmail(entry.clientEmail, "A time just opened up", html);
 }
 
+export async function sendReengagementEmail(clientEmail: string, clientName: string) {
+  const bookUrl = `${siteUrl}/book`;
+  const html = `
+    <p>Hi ${escapeHtml(clientName)},</p>
+    <p>It's been a while since your last session — we just wanted to say the door's still open whenever you'd like to come back.</p>
+    <p>You can book a time here, whenever suits: <a href="${bookUrl}">${bookUrl}</a></p>
+    <p>— ${escapeHtml(BRAND_NAME)}</p>
+  `;
+  // Neutral subject line — no service/appointment type revealed.
+  await sendEmail(clientEmail, "It's been a while", html);
+}
+
 export async function sendClientPortalLinkEmail(email: string, portalUrl: string) {
   const html = `
     <p>Hi,</p>

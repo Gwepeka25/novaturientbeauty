@@ -107,6 +107,11 @@ model Appointment {
   manageToken      String   @unique // secure token for reschedule/cancel links
   manageTokenExp   DateTime
   reminderSentAt   DateTime? // set once the day-before reminder email has gone out
+  reengagementSentAt DateTime? // set once a lapsed-client "it's been a while" email has
+                                // gone out for this being the client's most recent
+                                // appointment. A later booking makes a newer row the
+                                // client's most recent one instead, naturally
+                                // re-arming eligibility without touching this field.
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -115,6 +120,7 @@ model Appointment {
 
   @@index([startsAt])
   @@index([status])
+  @@index([clientEmail])
 }
 
 model ReviewInvite {
