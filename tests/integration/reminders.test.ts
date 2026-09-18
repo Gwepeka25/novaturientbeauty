@@ -21,8 +21,9 @@ function makeAppointment(overrides: {
   startsAt: Date;
   status?: string;
   reminderSentAt?: Date | null;
+  clientPhone?: string | null;
 }) {
-  const { startsAt, status = "confirmed", reminderSentAt = null } = overrides;
+  const { startsAt, status = "confirmed", reminderSentAt = null, clientPhone = null } = overrides;
   return prisma.appointment.create({
     data: {
       publicCode: `NB-${nanoid(7).toUpperCase()}`,
@@ -33,6 +34,7 @@ function makeAppointment(overrides: {
       status,
       clientName: "Test Client",
       clientEmail: "client@example.com",
+      clientPhone,
       manageToken: nanoid(32),
       manageTokenExp: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
       reminderSentAt,
@@ -83,5 +85,18 @@ describe("sendDueReminders", () => {
 
     expect(firstRun).toBe(1);
     expect(secondRun).toBe(0);
+  });
+
+  it("still reminds successfully when a phone number is on file (SMS reminder is best-effort)", async () => {
+    const appt = await makeAppointment({
+      startsAt: new Date(Date.now() + 6 * 60 * 60_000),
+      clientPhone: "+32470000000",
+    });
+
+    const sent = await sendDueReminders();
+
+    expect(sent).toBe(1);
+    const updated = await prisma.appointment.findUnique({ where: { id: appt.id } });
+    expect(updated?.reminderSentAt).not.toBeNull();
   });
 });
